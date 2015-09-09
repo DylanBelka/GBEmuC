@@ -9,10 +9,10 @@ struct instruction
 	//int ticks;
 } extern const instructions[256];
 
-void reset(void);
+void reset_cpu(void);
 void cpu_tick(void);
 
-void dumpCPU(void);
-void test(void);
+void dump_cpu(void);
+void cpu_test(void);
 
 #endif // GBEMC_CPU_H

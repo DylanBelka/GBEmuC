@@ -8,6 +8,11 @@
 
 int main(int argc, char **argv)
 {
-	
+	registers.A = 0x42;
+	registers.F.raw = 0x00;
+	printf("%x\n", registers.AF);
+	printf("%x\n", registers.BC);
+	printf("works");
+	cpu_test();
 	return 0;
 }

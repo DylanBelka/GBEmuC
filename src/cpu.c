@@ -201,7 +201,7 @@ void jp(bool condition)
 
 #undef OPCODE_LENGTH
 
-void dumpCPU(void)
+void dump_cpu(void)
 {
 	#define r(reg) registers.reg
 	printf("AF: %x\nBC: %x\nDE: %x\nHL: %x", 
@@ -209,7 +209,7 @@ void dumpCPU(void)
 	#undef r
 }
 
-void test(void)
+void cpu_test(void)
 {
 
 }
