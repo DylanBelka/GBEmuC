@@ -1,2 +1,2 @@
 #!/bin/bash
-gcc -std=c11 common.h registers.h memory.h cpu.h cpu.c registers.c memory.c main.c -o gbemc
+gcc -std=c11 src/common.h src/registers.h src/memory.h src/cpu.h src/cpu.c src/registers.c src/memory.c src/main.c -o gbemc
