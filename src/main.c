@@ -6,13 +6,27 @@
 #include "cpu.h"
 #include "memory.h"
 
+#define DEBUG
+
 int main(int argc, char **argv)
 {
-	registers.A = 0x42;
-	registers.F.raw = 0x00;
-	printf("%x\n", registers.AF);
-	printf("%x\n", registers.BC);
-	printf("works");
-	cpu_test();
+#ifdef DEBUG
+    init();
+    load_rom("tetris.gb");
+    run();
+    return 0;
+#endif // DEBUG
+
+	if (argc == 2)
+	{
+	    init();
+		load_rom(argv[1]);
+		run();
+	}
+	else
+	{
+		printf("usage: %s rom_name", argv[0]);
+		return 1;
+	}
 	return 0;
 }
