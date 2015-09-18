@@ -3,11 +3,14 @@
 #include "registers.h"
 #include "memory.h"
 #include "instructions.h"
+#include "memdefs.h"
+
+struct cpu cpu;
 
 void dump_cpu(void)
 {
 	#define r(reg) registers.reg
-	printf("AF: %x\nBC: %x\nDE: %x\nHL: %x", 
+	printf("AF: %x\nBC: %x\nDE: %x\nHL: %x\n",
 		r(AF), r(BC), r(DE), r(HL));
 	#undef r
 }
@@ -17,65 +20,97 @@ void cpu_test(void)
 
 }
 
+void reset_cpu(void)
+{
+	write_byte(TIMA, 0x00);
+	write_byte(TMA, 0x00);
+	write_byte(TAC, 0x00);
+	write_byte(LCDC, 0x91);
+	write_byte(SCY, 0x00);
+	write_byte(SCX, 0x00);
+	write_byte(LYC, 0x00);
+	write_byte(BGP, 0xFC);
+	write_byte(OBP0, 0xFC);
+	write_byte(OBP1, 0xFC);
+	write_byte(WY, 0x00);
+	write_byte(WX, 0x00);
+	write_byte(IE, 0x00);
+	write_byte(LY, 0x94);
+
+	registers.A = 0x01;
+	registers.F.raw = 0xB0;
+	registers.BC = 0x13;
+	registers.DE = 0xD8;
+	registers.HL = 0x14D;
+	registers.SP = 0xFFFE;
+	registers.PC = 0x100;
+}
+
+void interrupt(u16 addr)
+{
+    push(registers.PC);
+    registers.PC = addr;
+    cpu.IME = FALSE;
+    write_byte(IF, 0x0);
+}
+
+static int int_times = 0;
+
+void handle_interrupts(void)
+{
+    u8 int_enable, int_flag;
+    int_enable = read_byte(IE);
+    int_flag = read_byte(IF);
+
+    if (cpu.IME)
+    {
+        if ((int_enable & 0x1) && (int_flag & 0x1)) // vblank
+        {
+            printf("vblank PC = 0x%x\n", registers.PC);
+            getchar();
+            int_times++;
+            interrupt(0x40);
+        }
+    }
+}
+
+/* Interrupting too early */
+
+/* actually might be interrupting too late */
+/* interrupting too few times */
+
+static u16 prev_clocks = 0;
+
+static bool ww = FALSE;
+
 void cpu_tick(void)
 {
+    printf("%d\n", cpu.clock_cycles);
+    prev_clocks = cpu.clock_cycles;
+
+    handle_interrupts();
 	u8 instruction = read_byte(registers.PC);
-#if 0
-	if ((instruction & 0xFF) >= 0x40 && (instruction & 0xFF) <= 0xFB && (instruction & 0xFF) != 0x76)
-	{
-		u8 ops[] = { registers.B, registers.C, registers.D, registers.E, registers.H, registers.L, 
-						read_byte(registers.HL), registers.A,
-						registers.B, registers.C, registers.D, registers.E, registers.H, registers.L, 
-						read_byte(registers.HL), registers.A };
-		u8 op = ops[instruction & 0x0F];
-		bool is_lower_instr = (instruction & 0x0F) < 0x08;
-		
-		switch (instruction & 0xF0)
-		{
-			case 0x40: case 0x50: case 0x60: case 0x70: // ld r, r
-			{
-				ld_r_r(instruction, op, is_lower_instr);
-				break;
-			}
-			case 0x80:
-			{
-				if (is_lower_instr)
-					add_a_r(op);
-				else
-					adc_a_r(op);
-				break;
-			}
-			case 0x90:
-			{
-				if (is_lower_instr)
-					sub_r(op);
-				else
-					sbc_a_r(op);
-				break;
-			}
-			case 0xA0:
-			{
-				if (is_lower_instr)
-					and_r(op);
-				else
-					xor_r(op);
-				break;
-			}
-			case 0xB0:
-			{
-				if (is_lower_instr)
-					or_r(op);
-				else
-					cp(op);
-				break;
-			}
-		}
-	}
-	else
-	{
-		((void (*)(void))instructions[instruction].execute)();
-	}
-#endif
+
+    if (registers.PC == 0x2BC)
+        ww = TRUE;
+
+    if (ww)
+    {
+        	printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC);
+    }
+
+	// update clock ticks
+	cpu.clock_cycles += instruction_ticks[instruction];
+
+    // execute the instruction
+	((void (*)(void))instructions[instruction].execute)();
+
+    if (prev_clocks == 312 && cpu.clock_cycles == 316)
+    {
+        dump_cpu();
+        printf("%d int times\n", int_times);
+    }
+
 	// update PC
 	registers.PC += instructions[instruction].opcode_length;
 }
