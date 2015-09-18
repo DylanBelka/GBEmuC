@@ -11,4 +11,7 @@ typedef int16_t s16;
 
 typedef _Bool bool;
 
+#define TRUE 1
+#define FALSE 0
+
 #endif // GBEMC_COMMON_H
