@@ -40,7 +40,7 @@ struct registers
 		};
 		u16 BC;
 	};
-	union 
+	union
 	{
 		struct
 		{
@@ -61,6 +61,8 @@ struct registers
 
 	u16 SP;
 	u16 PC;
-} extern registers;
+};
+
+extern struct registers registers;
 
 #endif // GBEMC_REGISTERS_H
