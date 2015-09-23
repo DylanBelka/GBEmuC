@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "cpu.h"
 
-void update_carry(const unsigned int val)
+void update_carry(unsigned int val)
 {
 	if (val & 0xFF00)
 		registers.F.C = 1;
@@ -151,6 +151,7 @@ void pop(u16 *r)
 
 void add16(u16 *dst, u16 src)
 {
+	printf("add16 0x%x, 0x%x", *dst, src);
 	unsigned int result = *dst + src;
 	*dst += src;
 
@@ -167,23 +168,23 @@ void ret(bool condition)
 		cpu.clock_cycles += 12;
 	}
 	else
-    {
-        registers.PC++;
-    }
+	{
+		registers.PC++;
+	}
 }
 
 void call(bool condition)
 {
 	if (condition)
 	{
-        push(registers.PC + 3);
+		push(registers.PC + 3);
 		registers.PC = read_word(registers.PC + 1);
 		cpu.clock_cycles += 12;
 	}
 	else
-    {
-        registers.PC += 3;
-    }
+	{
+		registers.PC += 3;
+	}
 }
 
 void rst(const u8 dst)
@@ -200,9 +201,9 @@ void jr(bool condition)
 		cpu.clock_cycles += 4;
 	}
 	else
-    {
-        registers.PC += 2;
-    }
+	{
+		registers.PC += 2;
+	}
 }
 
 void jp(bool condition)
@@ -213,9 +214,9 @@ void jp(bool condition)
 		cpu.clock_cycles += 4;
 	}
 	else
-    {
-        registers.PC += 3;
-    }
+	{
+		registers.PC += 3;
+	}
 }
 
 void ld_r_r(u8 instruction, u8 src, bool is_lower_instr)
@@ -237,12 +238,12 @@ void ld_r_r(u8 instruction, u8 src, bool is_lower_instr)
 	*dst = src;
 }
 
-#undef OPCODE_LENGTH
-
 void rotl(u8 *r, int shift)
 {
 	u8 result;
 	result = (*r << shift) | (*r >> (8 - shift));
+	printf("rotl 0x%x = 0x%x", *r, result);
+	getchar();
 	*r = result;
 }
 
@@ -250,6 +251,8 @@ void rotr(u8 *r, int shift)
 {
 	u8 result;
 	result = (*r >> shift) | (*r << (8 - shift));
+	printf("rotr 0x%x = 0x%x", *r, result);
+	getchar();
 	*r = result;
 }
 
@@ -314,7 +317,7 @@ void sra(u8 *r)
 
 void swap(u8 *r)
 {
-    u8 swp = ((*r & 0x0F) << 0x4) | ((*r & 0xF0) >> 0x4);
+	u8 swp = ((*r & 0x0F) << 0x4) | ((*r & 0xF0) >> 0x4);
 	*r = swp;
 
 	update_zero(swp);
@@ -381,7 +384,7 @@ void bit_instruction_impl(u8 instr)
 		}
 	}
 
-    cpu.clock_cycles += bit_instruction_ticks[instr];
+	cpu.clock_cycles += bit_instruction_ticks[instr];
 
 	u8 *op1 = op1s[instr & 0x0F];
 	switch (instr & 0xF0)
@@ -669,7 +672,7 @@ void push_bc(void) { push(registers.BC); }											// 0xC5
 void add_a_n(void) { add(read_byte(registers.PC + 1)); }							// 0xC6
 void rst_0x00(void) { rst(0x00); }													// 0xC7
 void ret_z(void) { ret(registers.F.Z); }											// 0xC8
-void ret_unconditional(void) { ret(TRUE); cpu.clock_cycles -= 6; }											// 0xC9
+void ret_unconditional(void) { ret(TRUE); cpu.clock_cycles -= 6; }					// 0xC9
 void jp_z_nn(void) { jp(registers.F.Z); }											// 0xCA
 void bit_instruction(void) { bit_instruction_impl(read_byte(registers.PC + 1)); }	// 0xCB
 void call_z_nn(void) { call(registers.F.Z); }										// 0xCC
@@ -960,7 +963,7 @@ struct instruction instructions[256] =
 	{"0xEB undefined", undef_instr, 0},
 	{"0xEC undefined", undef_instr, 0},
 	{"0xED undefined", undef_instr, 0},
-	{"xor n", xor_n, 2},instructions_ticks
+	{"xor n", xor_n, 2},
 	{"rst 0x28", rst_0x28, 0},
 	{"ld a, (0xFF00 + n)", ld_a_zpg, 2},
 	{"pop af", pop_af, 1},
@@ -968,7 +971,7 @@ struct instruction instructions[256] =
 	{"di", di, 1},
 	{"0xF4 undefined", undef_instr, 0},
 	{"push af", push_af, 1},
-	{"or n", or_n, 2},instructions_ticks
+	{"or n", or_n, 2},
 	{"rst 0x30", rst_0x30, 0},
 	{"ld hl, sp", ld_hl_sp, 2},
 	{"ld sp, hl", ld_sp_hl, 1},
@@ -977,7 +980,7 @@ struct instruction instructions[256] =
 	{"0xFC undefined", undef_instr, 0},
 	{"0xFD undefined", undef_instr, 0},
 	{"cp n", cp_n, 2},
-	{"rst 0x38", rst_0x38, 0}
+	{"rst 0x38", rst_0x38, 0},
 };
 
 const int instruction_ticks[256] =
