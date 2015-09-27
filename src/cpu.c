@@ -50,7 +50,7 @@ void interrupt(u16 addr)
 {
     push(registers.PC);
     registers.PC = addr;
-    cpu.IME = FALSE;
+    cpu.IME = false;
     write_byte(IF, 0x0);
 }
 
@@ -64,7 +64,7 @@ void handle_interrupts(void)
 
     if (cpu.IME)
     {
-        if ((int_enable & 0x1) && (int_flag & 0x1)) // vblank
+        if ((int_enable & 0x1) && (int_flag & 0x1)) /* vblank */
         {
             printf("vblank PC = 0x%x\n", registers.PC);
             getchar();
@@ -79,38 +79,28 @@ void handle_interrupts(void)
 /* actually might be interrupting too late */
 /* interrupting too few times */
 
-static u16 prev_clocks = 0;
-
-static bool ww = FALSE;
+static bool ww = false;
 
 void cpu_tick(void)
 {
-    printf("%d\n", cpu.clock_cycles);
-    prev_clocks = cpu.clock_cycles;
-
-    handle_interrupts();
+	handle_interrupts();
 	u8 instruction = read_byte(registers.PC);
 
-    if (registers.PC == 0x2BC)
-        ww = TRUE;
-
+    if (registers.PC == 0x27D2)
+    {
+        ww = true;
+    }
     if (ww)
     {
-        	printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC);
+    	/* printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC); */
     }
 
-	// update clock ticks
-	cpu.clock_cycles += instruction_ticks[instruction];
+	/* update clock ticks */
+	cpu.clock_cycles += instructions[instruction].ticks;
 
-    // execute the instruction
-	((void (*)(void))instructions[instruction].execute)();
+	/* execute the instruction */
+    ((void (*)(void))instructions[instruction].execute)();
 
-    if (prev_clocks == 312 && cpu.clock_cycles == 316)
-    {
-        dump_cpu();
-        printf("%d int times\n", int_times);
-    }
-
-	// update PC
+	/* update PC */
 	registers.PC += instructions[instruction].opcode_length;
 }
