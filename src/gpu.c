@@ -6,6 +6,7 @@
 #include "memdefs.h"
 #include "common.h"
 #include "memory.h"
+#include "emu.h"
 
 u8 scanline;
 

@@ -5,15 +5,15 @@
 
 #include "common.h"
 
-extern u8 rom[0x4000];          // 0x0000-0x3FFF
-extern u8 banked_rom[0x4000];   // 0x4000-0x7FFF
-extern u8 vram[0x2000];         // 0x8000-0x9FFF
-extern u8 banked_ram[0x2000];   // 0xA000-0xBFFF (if available)
-extern u8 wram[0x2000];         // 0xC000-0xDFFF
-extern u8 echo_ram[0x2000];     // 0xE000-0xFDFF
-extern u8 oam[0xA0];            // 0xFE00-0xFE9F
-extern u8 hio[0x80];            // 0xFF00-0xFF7F
-extern u8 hram[0x80];           // 0xFF80-0xFFFE
+extern u8 rom[0x4000];			/* 0x0000-0x3FFF */
+extern u8 banked_rom[0x4000];	/* 0x4000-0x7FFF */
+extern u8 vram[0x2000];			/* 0x8000-0x9FFF */
+extern u8 banked_ram[0x2000];	/* 0xA000-0xBFFF (if available) */
+extern u8 wram[0x2000];			/* 0xC000-0xDFFF */
+extern u8 echo_ram[0x2000];     /* 0xE000-0xFDFF */
+extern u8 oam[0xA0];            /* 0xFE00-0xFE9F */
+extern u8 hio[0x80];            /* 0xFF00-0xFF7F */
+extern u8 hram[0x80];           /* 0xFF80-0xFFFE */
 
 void reset_mem(void);
 
@@ -29,4 +29,4 @@ u8* get_byte_ptr(u16 addr);
 
 void dma(void);
 
-#endif // GBEMC_MEMORY_H
+#endif /* GBEMC_MEMORY_H */

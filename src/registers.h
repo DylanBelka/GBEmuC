@@ -65,4 +65,4 @@ struct registers
 
 extern struct registers registers;
 
-#endif // GBEMC_REGISTERS_H
+#endif /* GBEMC_REGISTERS_H */

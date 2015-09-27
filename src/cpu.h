@@ -19,4 +19,4 @@ struct cpu
 
 extern struct cpu cpu;
 
-#endif // GBEMC_CPU_H
+#endif /* GBEMC_CPU_H */
