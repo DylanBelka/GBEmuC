@@ -1,7 +1,7 @@
 #ifndef GBEMC_EMU_H
 #define GBEMC_EMU_H
 
-//#define GLEW_STATIC
+/* #define GLEW_STATIC */
 
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -25,4 +25,4 @@ extern SDL_Window* window;
 extern SDL_GLContext gl_context;
 extern bool is_running;
 
-#endif // GBEMC_EMU_H
+#endif /* GBEMC_EMU_H */

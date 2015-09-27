@@ -32,6 +32,7 @@ void init_video(void)
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     window = SDL_CreateWindow("gbemc", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (window == NULL)
@@ -92,17 +93,9 @@ void run(void)
             }
             cpu.clock_cycles = 0;
         }
-        write_byte(IF, 0x1); // set vblank interrupt
-        while (cpu.clock_cycles < vblank_len) // emulate vblank
+        write_byte(IF, 0x1); /* set vblank interrupt */
+        while (cpu.clock_cycles < vblank_len) /* emulate vblank */
         {
-            /*
-            if (cpu.clock_cycles > hblank_len)
-            {
-                scanline++;
-                write_byte(LY, scanline);
-                cpu.clock_cycles = 0;
-            }
-            */
             scanline++;
             write_byte(LY, scanline);
             handle_events();
