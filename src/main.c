@@ -11,15 +11,15 @@
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
-    init();
-    load_rom("tetris.gb");
-    run();
-    return 0;
+	init();
+	load_rom("tetris.gb");
+	run();
+	return 0;
 #endif // DEBUG
 
 	if (argc == 2)
 	{
-	    init();
+		init();
 		load_rom(argv[1]);
 		run();
 	}

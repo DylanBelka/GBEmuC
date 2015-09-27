@@ -48,30 +48,30 @@ void reset_cpu(void)
 
 void interrupt(u16 addr)
 {
-    push(registers.PC);
-    registers.PC = addr;
-    cpu.IME = false;
-    write_byte(IF, 0x0);
+	push(registers.PC);
+	registers.PC = addr;
+	cpu.IME = false;
+	write_byte(IF, 0x0);
 }
 
 static int int_times = 0;
 
 void handle_interrupts(void)
 {
-    u8 int_enable, int_flag;
-    int_enable = read_byte(IE);
-    int_flag = read_byte(IF);
+	u8 int_enable, int_flag;
+	int_enable = read_byte(IE);
+	int_flag = read_byte(IF);
 
-    if (cpu.IME)
-    {
-        if ((int_enable & 0x1) && (int_flag & 0x1)) /* vblank */
-        {
-            printf("vblank PC = 0x%x\n", registers.PC);
-            getchar();
-            int_times++;
-            interrupt(0x40);
-        }
-    }
+	if (cpu.IME)
+	{
+		if ((int_enable & 0x1) && (int_flag & 0x1)) /* vblank */
+		{
+			printf("vblank PC = 0x%x\n", registers.PC);
+			getchar();
+			int_times++;
+			interrupt(0x40);
+		}
+	}
 }
 
 /* Interrupting too early */
@@ -86,20 +86,20 @@ void cpu_tick(void)
 	handle_interrupts();
 	u8 instruction = read_byte(registers.PC);
 
-    if (registers.PC == 0x27D2)
-    {
-        ww = true;
-    }
-    if (ww)
-    {
-    	/* printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC); */
-    }
+	if (registers.PC == 0x27D2)
+	{
+		ww = true;
+	}
+	if (ww)
+	{
+		/* printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC); */
+	}
 
 	/* update clock ticks */
 	cpu.clock_cycles += instructions[instruction].ticks;
 
 	/* execute the instruction */
-    ((void (*)(void))instructions[instruction].execute)();
+	((void (*)(void))instructions[instruction].execute)();
 
 	/* update PC */
 	registers.PC += instructions[instruction].opcode_length;

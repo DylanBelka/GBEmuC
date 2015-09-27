@@ -11,10 +11,10 @@ void cpu_test(void);
 
 struct cpu
 {
-    bool IME;
-    bool is_stopped;
-    bool is_halted;
-    u16 clock_cycles;
+	bool IME;
+	bool is_stopped;
+	bool is_halted;
+	u16 clock_cycles;
 };
 
 extern struct cpu cpu;

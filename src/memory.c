@@ -16,45 +16,45 @@ u8 hram[0x80];
 
 void reset_mem(void)
 {
-    #define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
-    unsigned int i;
-    for (i = 0; i < NELEMS(rom); i++)
-    {
-        rom[i] = 0;
-    }
-    for (i = 0; i < NELEMS(banked_rom); i++)
-    {
-        banked_rom[i] = 0;
-    }
-    for (i = 0; i < NELEMS(vram); i++)
-    {
-        vram[i] = 0;
-    }
-    for (i = 0; i < NELEMS(banked_ram); i++)
-    {
-        banked_ram[i] = 0;
-    }
-    for (i = 0; i < NELEMS(wram); i++)
-    {
-        wram[i] = 0;
-    }
-    for (i = 0; i < NELEMS(echo_ram); i++)
-    {
-        echo_ram[i] = 0;
-    }
-    for (i = 0; i < NELEMS(oam); i++)
-    {
-        oam[i] = 0;
-    }
-    for (i = 0; i < NELEMS(hio); i++)
-    {
-        hio[i] = 0;
-    }
-    for (i = 0; i < NELEMS(hram); i++)
-    {
-        hram[i] = 0;
-    }
-    #undef NELEMS
+	#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
+	unsigned int i;
+	for (i = 0; i < NELEMS(rom); i++)
+	{
+		rom[i] = 0;
+	}
+	for (i = 0; i < NELEMS(banked_rom); i++)
+	{
+		banked_rom[i] = 0;
+	}
+	for (i = 0; i < NELEMS(vram); i++)
+	{
+		vram[i] = 0;
+	}
+	for (i = 0; i < NELEMS(banked_ram); i++)
+	{
+		banked_ram[i] = 0;
+	}
+	for (i = 0; i < NELEMS(wram); i++)
+	{
+		wram[i] = 0;
+	}
+	for (i = 0; i < NELEMS(echo_ram); i++)
+	{
+		echo_ram[i] = 0;
+	}
+	for (i = 0; i < NELEMS(oam); i++)
+	{
+		oam[i] = 0;
+	}
+	for (i = 0; i < NELEMS(hio); i++)
+	{
+		hio[i] = 0;
+	}
+	for (i = 0; i < NELEMS(hram); i++)
+	{
+		hram[i] = 0;
+	}
+	#undef NELEMS
 }
 
 void write_byte_load_rom(u16 addr, u8 val)
@@ -131,21 +131,21 @@ u8 read_byte(u16 addr)
 	{
 		return oam[addr - 0xFE00];
 	}
-    else if (addr >= 0xFEA0 && addr < 0xFF00) /* unusable memory */
-    {
-        printf("read to unusable memory at 0x%x addr = 0x%x", registers.PC, addr);
-        getchar();
-        return 0;
-    }
-	else if (addr >= 0xFF00 && addr < 0xFF4C) /* hardware io registers */
-    {
-        return hio[addr - 0xFF00];
-    }
-    else if (addr >= 0xFF4C && addr < 0xFF80) /* empty, but unusable for io */
+	else if (addr >= 0xFEA0 && addr < 0xFF00) /* unusable memory */
 	{
-        printf("read to unusable memory at 0x%x addr = 0x%x", registers.PC, addr);
-        getchar();
-        return 0;
+		printf("read to unusable memory at 0x%x addr = 0x%x", registers.PC, addr);
+		getchar();
+		return 0;
+	}
+	else if (addr >= 0xFF00 && addr < 0xFF4C) /* hardware io registers */
+	{
+		return hio[addr - 0xFF00];
+	}
+	else if (addr >= 0xFF4C && addr < 0xFF80) /* empty, but unusable for io */
+	{
+		printf("read to unusable memory at 0x%x addr = 0x%x", registers.PC, addr);
+		getchar();
+		return 0;
 	}
 	else if (addr >= 0xFF80 && addr <= 0xFFFF) /* hram */
 	{
@@ -176,7 +176,7 @@ void write_byte(u16 addr, u8 val)
 	{
 		/* more memory bank controllers */
 		printf("mbc write at 0x%x addr = 0x%x val =  0x%x\n", registers.PC, addr, val);
-        getchar();
+		getchar();
 	}
 	else if (addr >= 0x8000 && addr < 0xA000) /* vram */
 	{
@@ -203,13 +203,13 @@ void write_byte(u16 addr, u8 val)
 		oam[addr - 0xFE00] = val;
 	}
 	else if (addr >= 0xFEA0 && addr < 0xFF00)
-    {
-        /* unusable memory */
-    }
+	{
+		/* unusable memory */
+	}
 	else if (addr >= 0xFF00 && addr < 0xFF80) /* hardware io */
-    {
-        hio[addr - 0xFF00] = val;
-    }
+	{
+		hio[addr - 0xFF00] = val;
+	}
 	else if (addr >= 0xFF80 && addr <= 0xFFFF) /* hram */
 	{
 		hram[addr - 0xFF80] = val;
