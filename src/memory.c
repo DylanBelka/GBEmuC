@@ -8,11 +8,8 @@ u8 rom[0x4000];
 u8 banked_rom[0x4000];
 u8 vram[0x2000];
 u8 banked_ram[0x2000];
-u8 wram[0x2000];
-u8 echo_ram[0x2000];
-u8 oam[0xA0];
-u8 hio[0x80];
-u8 hram[0x80];
+
+u8 internal_mem[0x4000];
 
 void reset_mem(void)
 {
@@ -34,25 +31,9 @@ void reset_mem(void)
 	{
 		banked_ram[i] = 0;
 	}
-	for (i = 0; i < NELEMS(wram); i++)
+	for (i = 0; i < NELEMS(internal_mem); i++)
 	{
-		wram[i] = 0;
-	}
-	for (i = 0; i < NELEMS(echo_ram); i++)
-	{
-		echo_ram[i] = 0;
-	}
-	for (i = 0; i < NELEMS(oam); i++)
-	{
-		oam[i] = 0;
-	}
-	for (i = 0; i < NELEMS(hio); i++)
-	{
-		hio[i] = 0;
-	}
-	for (i = 0; i < NELEMS(hram); i++)
-	{
-		hram[i] = 0;
+		internal_mem[i] = 0;
 	}
 	#undef NELEMS
 }
@@ -101,55 +82,10 @@ void load_rom(char *rom_name)
 
 u8 read_byte(u16 addr)
 {
-	if (addr < 0x4000) /* ROM bank 0 */
+	u8 *byte = get_byte(addr);
+	if (byte != NULL)
 	{
-		return rom[addr - 0x0000];
-	}
-	else if (addr >= 0x4000 && addr < 0x8000) /* ROM bank n */
-	{
-		return banked_rom[addr - 0x4000];
-	}
-	else if (addr >= 0x8000 && addr < 0xA000) /* vram */
-	{
-		return vram[addr - 0x8000];
-	}
-	else if (addr >= 0xA000 && addr < 0xC000) /* RAM bank */
-	{
-		return banked_ram[addr - 0xA000];
-	}
-	else if (addr >= 0xC000 && addr < 0xE000) /* internal (work) ram */
-	{
-		return wram[addr - 0xC000];
-	}
-	else if (addr >= 0xE000 && addr < 0xFE00) /* echo of wram */
-	{
-		printf("read from echo ram pc = 0x%x addr = 0x%x\n", registers.PC, addr);
-		getchar();
-		return echo_ram[addr - 0xE000];
-	}
-	else if (addr >= 0xFE00 && addr < 0xFEA0) /* oam */
-	{
-		return oam[addr - 0xFE00];
-	}
-	else if (addr >= 0xFEA0 && addr < 0xFF00) /* unusable memory */
-	{
-		printf("read to unusable memory at 0x%x addr = 0x%x", registers.PC, addr);
-		getchar();
-		return 0;
-	}
-	else if (addr >= 0xFF00 && addr < 0xFF4C) /* hardware io registers */
-	{
-		return hio[addr - 0xFF00];
-	}
-	else if (addr >= 0xFF4C && addr < 0xFF80) /* empty, but unusable for io */
-	{
-		printf("read to unusable memory at 0x%x addr = 0x%x", registers.PC, addr);
-		getchar();
-		return 0;
-	}
-	else if (addr >= 0xFF80 && addr <= 0xFFFF) /* hram */
-	{
-		return hram[addr - 0xFF80];
+		return *byte;
 	}
 	else
 	{
@@ -166,6 +102,7 @@ u16 read_word(u16 addr)
 
 void write_byte(u16 addr, u8 val)
 {
+	u8 *byte = get_byte(addr);
 	if (addr < 0x4000) /* ROM bank 0 */
 	{
 		/* memory bank controllers */
@@ -178,41 +115,9 @@ void write_byte(u16 addr, u8 val)
 		printf("mbc write at 0x%x addr = 0x%x val =  0x%x\n", registers.PC, addr, val);
 		getchar();
 	}
-	else if (addr >= 0x8000 && addr < 0xA000) /* vram */
+	else if (byte != NULL)
 	{
-		vram[addr - 0x8000] = val;
-	}
-	else if (addr >= 0xA000 && addr < 0xC000) /* RAM bank */
-	{
-		banked_ram[addr - 0xA000] = val;
-		printf("write to banked ram at 0x%x with value 0x%x PC = 0x%x\n", addr, val, registers.PC);
-		getchar();
-	}
-	else if (addr >= 0xC000 && addr < 0xE000) /* internal (work) ram */
-	{
-		wram[addr - 0xC000] = val;
-	}
-	else if (addr >= 0xE000 && addr < 0xFE00) /* echo of wram */
-	{
-		printf("write to echo ram pc = 0x%x addr = 0x%x val = 0x%x\n", registers.PC, addr, val);
-		getchar();
-		echo_ram[addr - 0xE000] = val;
-	}
-	else if (addr >= 0xFE00 && addr < 0xFEA0) /* oam */
-	{
-		oam[addr - 0xFE00] = val;
-	}
-	else if (addr >= 0xFEA0 && addr < 0xFF00)
-	{
-		/* unusable memory */
-	}
-	else if (addr >= 0xFF00 && addr < 0xFF80) /* hardware io */
-	{
-		hio[addr - 0xFF00] = val;
-	}
-	else if (addr >= 0xFF80 && addr <= 0xFFFF) /* hram */
-	{
-		hram[addr - 0xFF80] = val;
+		*byte = val;
 	}
 	else
 	{
@@ -227,7 +132,7 @@ void write_word(u16 addr, u16 val)
 	write_byte(addr + 1, (val >> 0x8) & 0xFF);
 }
 
-u8* get_byte_ptr(u16 addr)
+u8* get_byte(u16 addr)
 {
 	if (addr < 0x4000) /* ROM bank 0 */
 	{
@@ -235,7 +140,7 @@ u8* get_byte_ptr(u16 addr)
 	}
 	else if (addr >= 0x4000 && addr < 0x8000) /* ROM bank n */
 	{
-		return &rom[addr - 0x4000];
+		return &banked_rom[addr - 0x4000];
 	}
 	else if (addr >= 0x8000 && addr < 0xA000) /* vram */
 	{
@@ -245,27 +150,13 @@ u8* get_byte_ptr(u16 addr)
 	{
 		return &banked_ram[addr - 0xA000];
 	}
-	else if (addr >= 0xC000 && addr < 0xE000) /* internal (work) ram */
+	else if (addr >= 0xC000) /* internal memory */
 	{
-		return &wram[addr - 0xC000];
-	}
-	else if (addr > 0xE000 && addr < 0xFE00) /* echo of wram */
-	{
-		printf("get byte of echo ram pc = 0x%x addr = 0x%x\n", registers.PC, addr);
-		getchar();
-		return &echo_ram[addr - 0xE000];
-	}
-	else if (addr >= 0xFE00 && addr < 0xFEA0) /* oam */
-	{
-		return &oam[addr - 0xFE00];
-	}
-	else if (addr >= 0xFF00 && addr <= 0xFFFF) /* hram */
-	{
-		return &hram[addr - 0xFF00];
+        return &internal_mem[addr - 0xC000];
 	}
 	else
 	{
-		printf("get_byte_ptr at 0x%x to addr: 0x%x\n", registers.PC, addr);
+		printf("get_byte at 0x%x to addr: 0x%x\n", registers.PC, addr);
 		getchar();
 		return NULL;
 	}

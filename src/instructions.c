@@ -335,14 +335,14 @@ void set(u8 bit, u8 *r)
 void bit_instruction_impl(u8 instr)
 {
 	u8 *op1s[] = { &registers.B, &registers.C, &registers.D, &registers.E,
-					&registers.H, &registers.L, get_byte_ptr(registers.HL), &registers.A,
+					&registers.H, &registers.L, get_byte(registers.HL), &registers.A,
 					&registers.B, &registers.C, &registers.D, &registers.E,
-					&registers.H, &registers.L, get_byte_ptr(registers.HL), &registers.A };
+					&registers.H, &registers.L, get_byte(registers.HL), &registers.A };
 	u8 op2;
 	u8 *op1 = op1s[instr & 0x0F];
 	bool is_lower_instr = (instr & 0x0F) < 0x8;
 
-	if (op1 == get_byte_ptr(registers.HL))
+	if (op1 == get_byte(registers.HL))
 	{
 		cpu.clock_cycles += 8;
 	}
@@ -504,8 +504,8 @@ void jr_nc_n(void) { jr(!registers.F.C); }											/* 0x30 */
 void ld_sp_nn(void) { registers.SP = read_word(registers.PC + 1); }					/* 0x31 */
 void ldd_phl_a(void) { write_byte(registers.HL, registers.A); registers.HL--; }		/* 0x32 */
 void inc_sp(void) { registers.SP++; }												/* 0x33 */
-void inc_phl(void) { inc(get_byte_ptr(registers.HL)); }								/* 0x34 */
-void dec_phl(void) { dec(get_byte_ptr(registers.HL)); }								/* 0x35 */
+void inc_phl(void) { inc(get_byte(registers.HL)); }								/* 0x34 */
+void dec_phl(void) { dec(get_byte(registers.HL)); }								/* 0x35 */
 void ld_phl_n(void) { write_byte(registers.HL, read_byte(registers.PC + 1)); }		/* 0x36 */
 void scf(void) { registers.F.C = 1; registers.F.N = 0; registers.H = 0; }			/* 0x37 */
 void jr_c_n(void) { jr(registers.F.C); }											/* 0x38 */
