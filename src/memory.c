@@ -83,6 +83,11 @@ void load_rom(char *rom_name)
 u8 read_byte(u16 addr)
 {
 	u8 *byte = get_byte(addr);
+	if (addr == 0xFF00)
+	{
+		return 0xDF;
+	}
+
 	if (byte != NULL)
 	{
 		return *byte;
@@ -103,6 +108,7 @@ u16 read_word(u16 addr)
 void write_byte(u16 addr, u8 val)
 {
 	u8 *byte = get_byte(addr);
+
 	if (addr < 0x4000) /* ROM bank 0 */
 	{
 		/* memory bank controllers */
