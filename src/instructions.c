@@ -13,7 +13,7 @@ void update_carry(unsigned int val)
 		registers.F.C = 0;
 }
 
-void update_halfcarry(const unsigned int val)
+void update_halfcarry(unsigned int val)
 {
 	if (val & 0xF0)
 		registers.F.H = 1;
@@ -21,7 +21,7 @@ void update_halfcarry(const unsigned int val)
 		registers.F.H = 0;
 }
 
-void update_zero(const unsigned int val)
+void update_zero(unsigned int val)
 {
 	if (val == 0)
 		registers.F.Z = 1;
@@ -49,7 +49,7 @@ void dec(u8 *r)
 	registers.F.N = 1;
 }
 
-void cp(const u8 val)
+void cp(u8 val)
 {
 	unsigned int result = registers.A - val;
 	update_carry(result);
@@ -58,7 +58,7 @@ void cp(const u8 val)
 	registers.F.N = 1;
 }
 
-void add(const u8 val)
+void add(u8 val)
 {
 	unsigned int result = registers.A + val;
 	registers.A += val;
@@ -69,7 +69,7 @@ void add(const u8 val)
 	registers.F.N = 0;
 }
 
-void adc(const u8 val)
+void adc(u8 val)
 {
 	unsigned int result = registers.A + val + registers.F.C;
 	registers.A += val + registers.F.C;
@@ -80,7 +80,7 @@ void adc(const u8 val)
 	registers.F.N = 0;
 }
 
-void sub(const u8 val)
+void sub(u8 val)
 {
 	unsigned int result = registers.A - val;
 	registers.A -= val;
@@ -90,7 +90,7 @@ void sub(const u8 val)
 	update_zero(result);
 }
 
-void sbc(const u8 val)
+void sbc(u8 val)
 {
 	unsigned int result = registers.A - (val + registers.F.C);
 	registers.A -= (val + registers.F.C);
@@ -100,7 +100,7 @@ void sbc(const u8 val)
 	update_zero(result);
 }
 
-void and(const u8 val)
+void and(u8 val)
 {
 	unsigned int result = registers.A & val;
 	registers.A &= val;
@@ -111,7 +111,7 @@ void and(const u8 val)
 	registers.F.N = 0;
 }
 
-void xor(const u8 val)
+void xor(u8 val)
 {
 	unsigned int result = registers.A ^ val;
 	registers.A ^= val;
@@ -122,7 +122,7 @@ void xor(const u8 val)
 	registers.F.N = 0;
 }
 
-void or(const u8 val)
+void or(u8 val)
 {
 	unsigned int result = registers.A | val;
 	registers.A |= val;
@@ -184,7 +184,7 @@ void call(bool condition)
 	}
 }
 
-void rst(const u8 dst)
+void rst(u8 dst)
 {
 	push(registers.PC + 1);
 	registers.PC = dst;
@@ -504,8 +504,8 @@ void jr_nc_n(void) { jr(!registers.F.C); }											/* 0x30 */
 void ld_sp_nn(void) { registers.SP = read_word(registers.PC + 1); }					/* 0x31 */
 void ldd_phl_a(void) { write_byte(registers.HL, registers.A); registers.HL--; }		/* 0x32 */
 void inc_sp(void) { registers.SP++; }												/* 0x33 */
-void inc_phl(void) { inc(get_byte(registers.HL)); }								/* 0x34 */
-void dec_phl(void) { dec(get_byte(registers.HL)); }								/* 0x35 */
+void inc_phl(void) { inc(get_byte(registers.HL)); }									/* 0x34 */
+void dec_phl(void) { dec(get_byte(registers.HL)); }									/* 0x35 */
 void ld_phl_n(void) { write_byte(registers.HL, read_byte(registers.PC + 1)); }		/* 0x36 */
 void scf(void) { registers.F.C = 1; registers.F.N = 0; registers.H = 0; }			/* 0x37 */
 void jr_c_n(void) { jr(registers.F.C); }											/* 0x38 */
@@ -684,7 +684,7 @@ void jp_hl(void) { registers.PC = registers.HL; }									/* 0xE9 */
 void ld_pnn_a(void) { write_byte(read_word(registers.PC + 1), registers.A); }		/* 0xEA */
 void xor_n(void) { xor(read_byte(registers.PC + 1)); }								/* 0xEE */
 void rst_0x28(void) { rst(0x28); }													/* 0xEF */
-void ld_a_zpg(void) { registers.A = read_byte(read_byte(registers.PC + 1) + 0xFF00); } /* 0xF0 */
+void ld_a_zpg(void) { registers.A = read_byte((u8)read_byte(registers.PC + 1) + (u16)0xFF00); } /* 0xF0 */
 void pop_af(void) { pop(&registers.AF); }											/* 0xF1 */
 void ld_a_pc(void) { registers.A = read_byte(registers.C + 0xFF00); }				/* 0xF2 */
 void di(void) { cpu.IME = 0; }														/* 0xF3 */
@@ -693,82 +693,82 @@ void or_n(void) { or(read_byte(registers.PC + 1)); }								/* 0xF6 */
 void rst_0x30(void) { rst(0x30); }													/* 0xF7 */
 void ld_hl_sp(void) { registers.HL = registers.SP + read_byte(registers.PC + 1); }	/* 0xF8 */
 void ld_sp_hl(void) { registers.SP = registers.HL; }								/* 0xF9 */
-void ld_a_pnn(void) { registers.A = read_byte(registers.PC + 1); }					/* 0xFA */
+void ld_a_pnn(void) { registers.A = read_byte(read_word(registers.PC + 1)); }					/* 0xFA */
 void ei(void) { cpu.IME = 1; }														/* 0xFB */
 void cp_n(void) { cp(read_byte(registers.PC + 1)); }								/* 0xFE */
 void rst_0x38(void) { rst(0x38); }													/* 0xFF */
 
 void undef_instr(void)
 {
-	printf("undefined instruction at 0x%x", registers.PC);
+	printf("undefined instruction 0x%x pc = 0x%x", read_byte(registers.PC), registers.PC);
 	getchar();
 }
 
 struct instruction instructions[256] =
 {
 	{"nop", nop, 1, 4},
-	{"ld bc, nn", ld_bc_nn, 3, 12},
+	{"ld bc, 0x%x", ld_bc_nn, 3, 12},
 	{"ld (bc), a", ld_pbc_a, 1, 8},
 	{"inc bc", inc_bc, 1, 8},
 	{"inc b", inc_b, 1, 4},
 	{"dec b", dec_b, 1, 4},
-	{"ld b, n", ld_b_n, 2, 8},
+	{"ld b, 0x%x", ld_b_n, 2, 8},
 	{"rlca", rlca, 1, 4},
-	{"ld (nn), sp", ld_pnn_sp, 3, 20},
+	{"ld (0x%x), sp", ld_pnn_sp, 3, 20},
 	{"add hl, bc", add_hl_bc, 1, 8},
 	{"ld a, (bc)", ld_a_pbc, 1, 8},
 	{"dec bc", dec_bc, 1, 8},
 	{"inc c", inc_c, 1, 4},
 	{"dec c", dec_c, 1, 4},
-	{"ld c, n", ld_c_n, 2, 8},
+	{"ld c, 0x%x", ld_c_n, 2, 8},
 	{"rrca", rrca, 1, 4},
 	{"stop", stop_cpu, 1, 4},
-	{"ld de, nn", ld_de_nn, 3, 12},
+	{"ld de, 0x%x", ld_de_nn, 3, 12},
 	{"ld (de), a", ld_pde_a, 1, 8},
 	{"inc de", inc_de, 1, 8},
 	{"inc d", inc_d, 1, 4},
 	{"dec d", dec_d, 1, 4},
-	{"ld d, n", ld_d_n, 2, 8},
+	{"ld d, 0x%x", ld_d_n, 2, 8},
 	{"rla", rla, 1, 4},
-	{"jr n", jr_n, 0, 8},
+	{"jr 0x%x", jr_n, 0, 8},
 	{"add hl, de", add_hl_de, 1, 8},
 	{"ld a, (de)", ld_a_pde, 1, 8},
 	{"dec de", dec_de, 1, 8},
 	{"inc e", inc_e, 1, 4},
 	{"dec e", dec_e, 1, 4},
-	{"ld e, n", ld_e_n, 2, 8},
+	{"ld e, 0x%x", ld_e_n, 2, 8},
 	{"rra", rra, 1, 4},
-	{"jr nz, n", jr_nz_n, 0, 8},
-	{"ld hl, nn", ld_hl_nn, 3, 12},
+	{"jr nz, 0x%x", jr_nz_n, 0, 8},
+	{"ld hl, 0x%x", ld_hl_nn, 3, 12},
 	{"ldi (hl), a", ldi_phl_a, 1, 8},
 	{"inc hl", inc_hl, 1, 8},
 	{"inc h", inc_h, 1, 4},
 	{"dec h", dec_h, 1, 4},
-	{"ld h, n", ld_h_n, 2, 8},
+	{"ld h, 0x%x", ld_h_n, 2, 8},
 	{"daa", daa, 1, 4},
-	{"jr z, n", jr_z_n, 0, 8},
+	{"jr z, 0x%x", jr_z_n, 0, 8},
 	{"add hl, hl", add_hl_hl, 1, 8},
 	{"ldi a, (hl)", ldi_a_phl, 1, 8},
 	{"dec hl", dec_hl, 1, 8},
 	{"inc l", inc_l, 1, 4},
 	{"dec l", dec_l, 1, 4},
-	{"ld l, n", ld_l_n, 2, 8},
+	{"ld l, 0x%x", ld_l_n, 2, 8},
 	{"cpl", cpl, 1, 4},
-	{"jr nc, n", jr_nc_n, 0, 8},
-	{"ld sp, nn", ld_sp_nn, 3, 12},
+	{"jr nc, 0x%x", jr_nc_n, 0, 8},
+	{"ld sp, 0x%x", ld_sp_nn, 3, 12},
 	{"ldd (hl), a", ldd_phl_a, 1, 8},
 	{"inc sp", inc_sp, 1, 8},
 	{"inc (hl)", inc_phl, 1, 12},
 	{"dec (hl)", dec_phl, 1, 12},
-	{"ld (hl), n", ld_phl_n, 2, 8},
+	{"ld (hl), 0x%x", ld_phl_n, 2, 8},
 	{"scf", scf, 1, 4},
-	{"jr c, n", jr_c_n, 0, 8},
+	{"jr c, 0x%x", jr_c_n, 0, 8},
 	{"add hl, sp", add_hl_sp, 1, 8},
 	{"ldd a, (hl)", ldd_a_phl, 1, 8},
 	{"dec sp", dec_sp, 1, 8},
 	{"inc a", inc_a, 1, 4},
 	{"dec a", dec_a, 1, 4},
-	{"ld a, n", ld_a_n, 2, 8},
+	{"ld a, 0x%x", ld_a_n, 2, 8},
 	{"ccf", ccf, 1, 4},
 	{"ld b, b",	ld_b_b, 1, 4 },
 	{"ld b, c",	ld_b_c, 1, 4 },
@@ -900,66 +900,66 @@ struct instruction instructions[256] =
 	{"cp a",	cp_a, 1, 4 },
 	{"ret nz", ret_nz, 0, 8},
 	{"pop bc", pop_bc, 1, 12},
-	{"jp nz, nn", jp_nz_nn, 0, 12},
+	{"jp nz, 0x%x", jp_nz_nn, 0, 12},
 	{"jp nn", jp_nn, 0, 12},
-	{"call nz, nn", call_nz_nn, 0, 12},
+	{"call nz, 0x%x", call_nz_nn, 0, 12},
 	{"push bc", push_bc, 1, 16},
-	{"add a, n", add_a_n, 2, 8},
+	{"add a, 0x%x", add_a_n, 2, 8},
 	{"rst 0x00", rst_0x00, 0, 32}, /* rst is actually 1 byte but the PC is never incremented because of it */
 	{"ret z", ret_z, 0, 8},
 	{"ret", ret_unconditional, 0, 8},
-	{"jp z, nn", jp_z_nn, 0, 12},
+	{"jp z, 0x%x", jp_z_nn, 0, 12},
 	{"bit instruction", bit_instruction, 2, 8},
-	{"call z, nn", call_z_nn, 0, 12},
-	{"call nn", call_nn, 0, 12},
-	{"adc a, n", adc_a_n, 2, 8},
+	{"call z, 0x%x", call_z_nn, 0, 12},
+	{"call 0x%x", call_nn, 0, 12},
+	{"adc a, 0x%x", adc_a_n, 2, 8},
 	{"rst 0x08", rst_0x08, 0, 32},
 	{"ret nc", ret_nc, 0, 8},
 	{"pop de", pop_de, 1, 12},
-	{"jp nc, nn", jp_nc_nn, 0, 12},
+	{"jp nc, 0x%x", jp_nc_nn, 0, 12},
 	{"0xD3 nop", nop, 1, 0},
-	{"call nc, nn", call_nc_nn, 0, 12},
+	{"call nc, 0x%x", call_nc_nn, 0, 12},
 	{"push de", push_de, 1, 16},
-	{"sub n", sub_n, 2, 8},
+	{"sub 0x%x", sub_n, 2, 8},
 	{"rst 0x10", rst_0x10, 0, 32},
 	{"ret c", ret_c, 0, 8},
 	{"reti", reti, 0, 8},
-	{"jp c, nn", jp_c_nn, 0, 12},
+	{"jp c, 0x%x", jp_c_nn, 0, 12},
 	{"0xDB undefined", undef_instr, 0, 0},
-	{"call c, nn", call_c_nn, 0, 12},
+	{"call c, 0x%x", call_c_nn, 0, 12},
 	{"0xDD undefined", undef_instr, 0, 0},
-	{"sbc a, n", sbc_a_n, 2, 8},
+	{"sbc a, 0x%x", sbc_a_n, 2, 8},
 	{"rst 0x18", rst_0x18, 0, 32},
-	{"ld (0xFF00 + n), a", ld_zpg_a, 2, 12},
+	{"ld (0xFF00 + 0x%x), a", ld_zpg_a, 2, 12},
 	{"pop hl", pop_hl, 1, 12},
 	{"ld (c), a", ld_pc_a, 1, 8},
 	{"0xE3 nop", nop, 1, 0},
 	{"0xE4 undefined", undef_instr, 0, 0},
 	{"push hl", push_hl, 1, 16},
-	{"and n", and_n, 2, 8},
+	{"and 0x%x", and_n, 2, 8},
 	{"rst 0x20", rst_0x20, 0, 32},
-	{"add sp, n", add_sp_n, 2, 16},
+	{"add sp, 0x%x", add_sp_n, 2, 16},
 	{"jp (hl)", jp_hl, 0, 4}, /* jp hl or jp (hl)? */
-	{"ld (nn), a", ld_pnn_a, 3, 16},
+	{"ld (0x%x), a", ld_pnn_a, 3, 16},
 	{"0xEB undefined", undef_instr, 0, 0},
 	{"0xEC undefined", undef_instr, 0, 0},
 	{"0xED undefined", undef_instr, 0, 0},
-	{"xor n", xor_n, 2, 8},
+	{"xor 0x%x", xor_n, 2, 8},
 	{"rst 0x28", rst_0x28, 0, 32},
-	{"ld a, (0xFF00 + n)", ld_a_zpg, 2, 12},
+	{"ld a, (0xFF00 + 0x%x)", ld_a_zpg, 2, 12},
 	{"pop af", pop_af, 1, 12},
 	{"ld a, (c)", ld_a_pc, 1, 8},
 	{"di", di, 1, 4},
 	{"0xF4 undefined", undef_instr, 0, 0},
 	{"push af", push_af, 1, 16},
-	{"or n", or_n, 2, 8},
+	{"or 0x%x", or_n, 2, 8},
 	{"rst 0x30", rst_0x30, 0, 32},
 	{"ld hl, sp", ld_hl_sp, 2, 12},
 	{"ld sp, hl", ld_sp_hl, 1, 8},
-	{"ld a, (nn)", ld_a_pnn, 3, 16},
+	{"ld a, (0x%x)", ld_a_pnn, 3, 16},
 	{"ei", ei, 1, 4},
 	{"0xFC undefined", undef_instr, 0, 0},
 	{"0xFD undefined", undef_instr, 0, 0},
-	{"cp n", cp_n, 2, 8},
+	{"cp 0x%x", cp_n, 2, 8},
 	{"rst 0x38", rst_0x38, 0, 32},
 };
