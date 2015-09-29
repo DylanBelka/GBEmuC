@@ -66,34 +66,40 @@ void handle_interrupts(void)
 	{
 		if ((int_enable & 0x1) && (int_flag & 0x1)) /* vblank */
 		{
-			printf("vblank PC = 0x%x\n", registers.PC);
-			getchar();
 			int_times++;
 			interrupt(0x40);
 		}
 	}
 }
 
-/* Interrupting too early */
-
-/* actually might be interrupting too late */
-/* interrupting too few times */
-
-static bool ww = false;
+void print_instruction(u8 instruction)
+{
+	if (instructions[instruction].opcode_length == 2)
+	{
+		printf(instructions[instruction].disassembly, read_byte(registers.PC + 1));
+		printf("\tat 0x%x\n", registers.PC);
+	}
+	else if (instructions[instruction].opcode_length == 3)
+	{
+		printf(instructions[instruction].disassembly, read_word(registers.PC + 1));
+		printf("\n(0x%x) = 0x%x", read_word(registers.PC + 1), read_byte(read_word(registers.PC + 1)));
+		printf("\tat 0x%x\n", registers.PC);
+	}
+	else if (instructions[instruction].opcode_length == 0)
+	{
+		printf(instructions[instruction].disassembly, read_word(registers.PC + 1));
+		printf("\tat 0x%x\n", registers.PC);
+	}
+	else
+	{
+		printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC);
+	}
+}
 
 void cpu_tick(void)
 {
 	handle_interrupts();
 	u8 instruction = read_byte(registers.PC);
-
-	if (registers.PC == 0x27D2)
-	{
-		ww = true;
-	}
-	if (ww)
-	{
-		/* printf("%s\tat 0x%x\n\n", instructions[instruction].disassembly, registers.PC); */
-	}
 
 	/* update clock ticks */
 	cpu.clock_cycles += instructions[instruction].ticks;
