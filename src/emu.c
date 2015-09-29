@@ -10,7 +10,8 @@
 
 SDL_Window* window;
 SDL_GLContext gl_context;
-bool is_running = TRUE;
+bool is_running = true;
+SDL_Surface* window_surf;
 
 void handle_sdl_error(char *msg)
 {
@@ -29,25 +30,19 @@ void init_video(void)
 	{
 		handle_sdl_error("unable to initialize SDL");
 	}
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	window = SDL_CreateWindow("gbemc", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-							  WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+							  WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
 	if (window == NULL)
 	{
 		handle_sdl_error("unable to create window");
 	}
-	gl_context = SDL_GL_CreateContext(window);
-	if (gl_context == NULL)
-	{
-		handle_sdl_error("unable to create GL context");
-	}
 
-	SDL_GL_SetSwapInterval(1);
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	pixels = (u8*)malloc(sizeof(u8) * WINDOW_WIDTH * WINDOW_HEIGHT);
+	window_surf = SDL_GetWindowSurface(window);
+	if (window_surf == NULL)
+	{
+        handle_sdl_error("unable to create window surface");
+	}
+	SDL_UpdateWindowSurface(window);
 }
 
 void handle_events(void)
@@ -58,7 +53,7 @@ void handle_events(void)
 		switch (e.type)
 		{
 		case SDL_QUIT:
-			is_running = FALSE;
+			is_running = false;
 			break;
 		case SDL_KEYDOWN:
 			break;
@@ -83,7 +78,7 @@ void run(void)
 	while (is_running)
 	{
 		render_full();
-		while (scanline != WINDOW_HEIGHT)
+		while (scanline != GB_WINDOW_HEIGHT)
 		{
 			draw_scanline();
 			while (cpu.clock_cycles < hblank_len)
