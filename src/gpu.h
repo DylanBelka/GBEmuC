@@ -8,6 +8,4 @@ extern u8 scanline;
 void render_full(void);
 void draw_scanline(void);
 
-u8 *pixels;
-
 #endif // GBEMC_GPU_H
