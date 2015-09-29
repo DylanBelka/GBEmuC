@@ -218,8 +218,6 @@ void rotl(u8 *r, int shift)
 {
 	u8 result;
 	result = (*r << shift) | (*r >> (8 - shift));
-	printf("rotl 0x%x = 0x%x", *r, result);
-	getchar();
 	*r = result;
 }
 
@@ -227,8 +225,6 @@ void rotr(u8 *r, int shift)
 {
 	u8 result;
 	result = (*r >> shift) | (*r << (8 - shift));
-	printf("rotr 0x%x = 0x%x", *r, result);
-	getchar();
 	*r = result;
 }
 
