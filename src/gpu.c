@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//#include <GL/glew.h>
-
 #include "gpu.h"
 #include "memdefs.h"
 #include "common.h"
@@ -24,43 +22,45 @@ u8 scanline;
 // bg1 0x9800-0x9BFF
 // bg2 0x9C00-0x9FFF
 
-void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y)
+void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y, bool is_sprite)
 {
     for (int i = 0x80; i >= 1; i >>= 1)
 	{
         int curr_bit1 = b1 & i;
         int curr_bit2 = b2 & i;
-        u32 *pixels = (u32*)window_surf->pixels;
+        u32 *pixels = (u32*)virt_window_surf->pixels;
+		if ((s32)*x >= 0 && (s32)*y >= 0 &&
+			(s32)*x < virt_window_surf->w && (s32)*y < virt_window_surf->h) // make sure the coords are in bounds
+		{
+			u32 *pixel = &pixels[*y * virt_window_surf->w + *x];
 
-        if (curr_bit1 && curr_bit2) // bit1 (on) and bit2 (on)
-		{
-			printf("x = %d y = %d\n", *x, *y);
-			pixels[*y * window_surf->w + *x] = 0x081820;
+			if (curr_bit1 && curr_bit2) // bit1 (on) and bit2 (on)
+			{
+				*pixel = 0x081820; // "black"
+			}
+			else if (!is_sprite && !curr_bit1 && !curr_bit2) // bit1 (off) and bit2 (off)
+			{
+				*pixel = 0xE0F8D0; // "white"
+			}
+			else if (curr_bit1 && !curr_bit2) // bit1 (on) and bit2 (off)
+			{
+				*pixel = 0x88C070; // "light grey"
+			}
+			else if (!is_sprite) // bit1 (off) bit2 (on)
+			{
+				*pixel = 0x346856; // "dark grey"
+			}
 		}
-		else if (!curr_bit1 && !curr_bit2) // bit1 (off) and bit2 (off)
-		{
-			//pixels[*y * window_surf->w + *x] = 0xE0F8D0;
-		}
-		else if (curr_bit1 && !curr_bit2) // bit1 (on) and bit2 (off)
-		{
-			printf("x = %d y = %d\n", *x, *y);
-			pixels[*y * window_surf->w + *x] = 0x88C070;
-		}
-		else // bit1 (off) bit2 (on)
-		{
-			printf("x = %d y = %d\n", *x, *y);
-			pixels[*y * window_surf->w + *x] = 0x346856;
-		}
-
-		(*x)++;
+		*x += 1;
 	}
+
 	*x -= 8;
-	(*y)++;
+	*y += 1;
 }
 
 void draw_background(void)
 {
-	unsigned int x = 0, y = 0;
+	u32 x = 0, y = 0;
 	u8 lcdc = read_byte(LCDC);
 	bool is_unsigned_chrs = (lcdc & bit4) ? true : false;
 	u16 bg_map_data_start, bg_map_data_addr_end;
@@ -85,7 +85,7 @@ void draw_background(void)
 
 		for (int j = chr_loc_start; j < chr_loc_start + 0x10; j += 2)
 		{
-			draw_slice(read_byte(j), read_byte(j + 1), &x, &y);
+			draw_slice(read_byte(j), read_byte(j + 1), &x, &y, false);
 		}
 		x += 8;
 		y -= 8;
@@ -107,19 +107,19 @@ void draw_sprites(void)
 		 * so a sprite at (0, 0) is offscreen and actually
 		 * at (-8, 16)
 		 */
-        unsigned int y = (read_byte(i) & 0xFF) - 16;
-        unsigned int x = (read_byte(i + 1) & 0xFF) - 8;
+        u32 y = (read_byte(i) & 0xFF) - 16;
+        u32 x = (read_byte(i + 1) & 0xFF) - 8;
         u16 chr_loc_start = read_byte(i + 2) * 0x10 + CHR_MAP_UNSIGNED;
         for (int j = chr_loc_start; j < chr_loc_start + 0x10; j += 2)
 		{
-            draw_slice(read_byte(j), read_byte(j + 1), &x, &y);
+            draw_slice(read_byte(j), read_byte(j + 1), &x, &y, true);
 		}
 		if (is_8x16_sprite) // draw the second half of the sprite
 		{
 			chr_loc_start += 0x10; // second half of the sprite is located directly after the first
 			for (int j = chr_loc_start; j < chr_loc_start + 0x10; j += 2)
 			{
-				draw_slice(read_byte(j), read_byte(j + 1), &x, &y);
+				draw_slice(read_byte(j), read_byte(j + 1), &x, &y, true);
 			}
 		}
 	}
@@ -138,6 +138,7 @@ void clear_surface(SDL_Surface *surf)
 void render_full(void)
 {
 	clear_surface(window_surf);
+	clear_surface(virt_window_surf);
 	u8 lcdc = read_byte(LCDC);
 	if (lcdc & bit7) // is lcd on?
 	{
@@ -165,6 +166,12 @@ void draw_scanline(void)
 	scanline++;
 	if (scanline == GB_WINDOW_HEIGHT)
 	{
+		SDL_Rect dstRect;
+		dstRect.x = 0;
+		dstRect.y = 0;
+		dstRect.w = window_surf->w;
+		dstRect.h = window_surf->h;
+		SDL_BlitSurface(virt_window_surf, NULL, window_surf, &dstRect);
 		SDL_UpdateWindowSurface(window);
 	}
 }
