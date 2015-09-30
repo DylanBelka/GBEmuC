@@ -1,6 +1,6 @@
 *.exe
 *.gb
-*.cbp
+
 *.bat
 *.depend
 *.layout
