@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include "registers.h"
+#include "emu.h"
 
 u8 rom[0x4000];
 u8 banked_rom[0x4000];
@@ -83,9 +84,20 @@ void load_rom(char *rom_name)
 u8 read_byte(u16 addr)
 {
 	u8 *byte = get_byte(addr);
-	if (addr == 0xFF00)
+	if (addr == 0xFF00) // key input
 	{
-		return 0xDF;
+		if (key_info.colID == bit4)
+		{
+			return key_info.keys[p15] | key_info.colID | 0xC0; // set the upper (unused) bits with 0xC0
+		}
+		else if (key_info.colID == bit5)
+		{
+			return key_info.keys[p14] | key_info.colID | 0xC0;
+		}
+	}
+	else if (addr == 0xff04) // div
+	{
+        return (u8)rand(); // todo: implement div
 	}
 
 	if (byte != NULL)
@@ -109,11 +121,20 @@ void write_byte(u16 addr, u8 val)
 {
 	u8 *byte = get_byte(addr);
 
+	if (addr == 0xFF46) // dma
+	{
+		dma();
+	}
+	else if (addr == 0xFF00) // key input
+	{
+		key_info.colID = registers.A;
+		return;
+	}
 	if (addr < 0x4000) /* ROM bank 0 */
 	{
 		/* memory bank controllers */
 		printf("mbc write at 0x%x addr = 0x%x val =  0x%x instr = 0x%x\n", registers.PC, addr, val, read_byte(registers.PC));
-		getchar();
+		//getchar();
 	}
 	else if (addr >= 0x4000 && addr < 0x8000) /* ROM bank n */
 	{
