@@ -15,14 +15,14 @@ struct registers
 				{
 					struct
 					{
+						u8 _n_b0 : 1;
+						u8 _n_b1 : 1;
+						u8 _n_b2 : 1;
+						u8 _n_b3 : 1;
 						u8 C : 1;
-						u8 N : 1;
-						u8 P : 1;
-						u8 F3 : 1;
 						u8 H : 1;
-						u8 F5 : 1;
+						u8 N : 1;
 						u8 Z : 1;
-						u8 S : 1;
 					};
 					u8 raw;
 				};
