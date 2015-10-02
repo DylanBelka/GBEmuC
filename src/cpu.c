@@ -54,8 +54,6 @@ void interrupt(u16 addr)
 	write_byte(IF, 0x0);
 }
 
-static int int_times = 0;
-
 void handle_interrupts(void)
 {
 	u8 int_enable, int_flag;
@@ -66,7 +64,7 @@ void handle_interrupts(void)
 	{
 		if ((int_enable & 0x1) && (int_flag & 0x1)) /* vblank */
 		{
-			int_times++;
+			printf("0x%x\n", registers.PC);
 			interrupt(0x40);
 		}
 	}
