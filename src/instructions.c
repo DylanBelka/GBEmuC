@@ -164,6 +164,7 @@ void ret(bool condition)
 	if (condition)
 	{
 		pop(&registers.PC);
+		cpu.clock_cycles += 12;
 	}
 	else
 	{
@@ -177,6 +178,7 @@ void call(bool condition)
 	{
 		push(registers.PC + 3);
 		registers.PC = read_word(registers.PC + 1);
+		cpu.clock_cycles += 12;
 	}
 	else
 	{
@@ -195,6 +197,7 @@ void jr(bool condition)
 	if (condition)
 	{
 		registers.PC += (s8)read_byte(registers.PC + 1) + 2;
+		cpu.clock_cycles += 4;
 	}
 	else
 	{
@@ -207,6 +210,7 @@ void jp(bool condition)
 	if (condition)
 	{
 		registers.PC = read_word(registers.PC + 1);
+		cpu.clock_cycles += 4;
 	}
 	else
 	{
@@ -337,8 +341,8 @@ void bit_instruction_impl(u8 instr)
 	u8 op2;
 	u8 *op1 = op1s[instr & 0x0F];
 	bool is_lower_instr = (instr & 0x0F) < 0x8;
-
-	if (op1 == get_byte(registers.HL))
+	
+	if ((instr & 0x0F) == 6 || (instr & 0x0F) == 14)
 	{
 		cpu.clock_cycles += 8;
 	}
@@ -566,7 +570,7 @@ void ld_phl_d(void) { write_byte(registers.HL, registers.D); }						/* 0x72 */
 void ld_phl_e(void) { write_byte(registers.HL, registers.E); }						/* 0x73 */
 void ld_phl_h(void) { write_byte(registers.HL, registers.H); }						/* 0x74 */
 void ld_phl_l(void) { write_byte(registers.HL, registers.L); }						/* 0x75 */
-void halt_cpu(void) { cpu.is_halted = 1; }											/* 0x76 */
+void halt_cpu(void) { cpu.is_halted = true; }										/* 0x76 */
 void ld_phl_a(void) { write_byte(registers.HL, registers.A); }						/* 0x77 */
 void ld_a_b(void) { registers.A = registers.B; }									/* 0x78 */
 void ld_a_c(void) { registers.A = registers.C; }									/* 0x79 */
@@ -664,7 +668,7 @@ void push_de(void) { push(registers.DE); }											/* 0xD5 */
 void sub_n(void) { sub(read_byte(registers.PC + 1)); }								/* 0xD6 */
 void rst_0x10(void) { rst(0x10); }													/* 0xD7 */
 void ret_c(void) { ret(registers.F.C); }											/* 0xD8 */
-void reti(void) { ret(true); cpu.IME = 1; }											/* 0xD9 */
+void reti(void) { ret(true); cpu.IME = true; }										/* 0xD9 */
 void jp_c_nn(void) { jp(registers.F.C); }											/* 0xDA */
 void call_c_nn(void) { call(registers.F.C); }										/* 0xDB */
 void sbc_a_n(void) { sbc(read_byte(registers.PC + 1)); }							/* 0xDE */
@@ -683,14 +687,14 @@ void rst_0x28(void) { rst(0x28); }													/* 0xEF */
 void ld_a_zpg(void) { registers.A = read_byte((u8)read_byte(registers.PC + 1) + (u16)0xFF00); } /* 0xF0 */
 void pop_af(void) { pop(&registers.AF); }											/* 0xF1 */
 void ld_a_pc(void) { registers.A = read_byte(registers.C + 0xFF00); }				/* 0xF2 */
-void di(void) { cpu.IME = 0; }														/* 0xF3 */
+void di(void) { cpu.IME = false; }													/* 0xF3 */
 void push_af(void) { push(registers.AF); }											/* 0xF5 */
 void or_n(void) { or(read_byte(registers.PC + 1)); }								/* 0xF6 */
 void rst_0x30(void) { rst(0x30); }													/* 0xF7 */
 void ld_hl_sp(void) { registers.HL = registers.SP + read_byte(registers.PC + 1); }	/* 0xF8 */
 void ld_sp_hl(void) { registers.SP = registers.HL; }								/* 0xF9 */
-void ld_a_pnn(void) { registers.A = read_byte(read_word(registers.PC + 1)); }					/* 0xFA */
-void ei(void) { cpu.IME = 1; }														/* 0xFB */
+void ld_a_pnn(void) { registers.A = read_byte(read_word(registers.PC + 1)); }		/* 0xFA */
+void ei(void) { cpu.IME = true; }													/* 0xFB */
 void cp_n(void) { cp(read_byte(registers.PC + 1)); }								/* 0xFE */
 void rst_0x38(void) { rst(0x38); }													/* 0xFF */
 
