@@ -341,7 +341,7 @@ void bit_instruction_impl(u8 instr)
 	u8 op2;
 	u8 *op1 = op1s[instr & 0x0F];
 	bool is_lower_instr = (instr & 0x0F) < 0x8;
-	
+
 	if ((instr & 0x0F) == 6 || (instr & 0x0F) == 14)
 	{
 		cpu.clock_cycles += 8;
@@ -939,7 +939,7 @@ struct instruction instructions[256] =
 	{"and 0x%x", and_n, 2, 8},
 	{"rst 0x20", rst_0x20, 0, 32},
 	{"add sp, 0x%x", add_sp_n, 2, 16},
-	{"jp (hl)", jp_hl, 0, 4}, /* jp hl or jp (hl)? */
+	{"jp (hl)", jp_hl, 0, 4},
 	{"ld (0x%x), a", ld_pnn_a, 3, 16},
 	{"0xEB undefined", undef_instr, 0, 0},
 	{"0xEC undefined", undef_instr, 0, 0},
