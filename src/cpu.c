@@ -62,10 +62,25 @@ void handle_interrupts(void)
 
 	if (cpu.IME)
 	{
-		if ((int_enable & 0x1) && (int_flag & 0x1)) /* vblank */
+		if ((int_enable & bit0) && (int_flag & bit0)) /* vblank */
 		{
-			printf("0x%x\n", registers.PC);
 			interrupt(0x40);
+		}
+		else if ((int_enable & bit1) && (int_flag & bit1)) /* lcdc (stat) */
+		{
+			interrupt(0x48);
+		}
+		else if ((int_enable & bit1) && (int_flag & bit1)) /* timer overflow */
+		{
+			interrupt(0x50);
+		}
+		else if ((int_enable & bit1) && (int_flag & bit1)) /* serial link */
+		{
+			interrupt(0x58);
+		}
+		else if ((int_enable & bit1) && (int_flag & bit1)) /* joypad press */
+		{
+			interrupt(0x60);
 		}
 	}
 }
