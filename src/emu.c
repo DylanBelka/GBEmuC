@@ -167,7 +167,6 @@ void run(void)
 			}
 			cpu.clock_cycles = 0;
 		}
-		write_byte(IF, 0x1); /* set vblank interrupt */
 		while (cpu.clock_cycles < vblank_len) /* emulate vblank */
 		{
 			scanline++;
