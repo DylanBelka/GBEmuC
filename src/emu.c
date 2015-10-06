@@ -12,7 +12,6 @@ SDL_Window* window;
 SDL_GLContext gl_context;
 bool is_running = true;
 SDL_Surface* window_surf;
-SDL_Surface* virt_window_surf;
 struct GBKeys key_info;
 
 void handle_sdl_error(char *msg)
@@ -43,13 +42,6 @@ void init_video(void)
 	if (window_surf == NULL)
 	{
         handle_sdl_error("unable to create window surface");
-	}
-	SDL_PixelFormat *fmt = window_surf->format;
-	virt_window_surf = SDL_CreateRGBSurface(0, VIRT_GB_WINDOW_WIDTH, VIRT_GB_WINDOW_HEIGHT,
-											fmt->BitsPerPixel, fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask);
-	if (virt_window_surf == NULL)
-	{
-		handle_sdl_error("unable to create virtual window surface");
 	}
 
 	SDL_UpdateWindowSurface(window);
@@ -192,7 +184,6 @@ void cleanup(void)
 {
 	SDL_DestroyWindow(window);
 	SDL_FreeSurface(window_surf);
-	SDL_FreeSurface(virt_window_surf);
 	SDL_GL_DeleteContext(gl_context);
 	SDL_Quit();
 }

@@ -34,7 +34,6 @@ extern SDL_Window* window;
 extern SDL_GLContext gl_context;
 extern bool is_running;
 extern SDL_Surface* window_surf;
-extern SDL_Surface* virt_window_surf;
 extern struct GBKeys key_info;
 
 enum KeyGroups

@@ -28,11 +28,23 @@ void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y, bool is_sprite)
 	{
         int curr_bit1 = b1 & i;
         int curr_bit2 = b2 & i;
-        u32 *pixels = (u32*)virt_window_surf->pixels;
+        u32 *pixels = (u32*)window_surf->pixels;
 		if ((s32)*x >= 0 && (s32)*y >= 0 &&
-			(s32)*x < virt_window_surf->w && (s32)*y < virt_window_surf->h) // make sure the coords are in bounds
+			(s32)*x < window_surf->w && (s32)*y < window_surf->h) // make sure the coords are in bounds
 		{
-			u32 *pixel = &pixels[*y * virt_window_surf->w + *x];
+			u32 *pixel;
+			if (!is_sprite)
+			{
+				u32 scrolledX, scrolledY;
+				// emulate background scrolling
+				scrolledX = *x + read_byte(SCX);
+				scrolledY = *y + read_byte(SCY);
+				pixel = &pixels[scrolledY * window_surf->w + scrolledX];
+			}
+			else // sprites are not scrolled
+			{
+				pixel = &pixels[*y * window_surf->w + *x];
+			}
 
 			if (curr_bit1 && curr_bit2) // bit1 (on) and bit2 (on)
 			{
@@ -127,7 +139,42 @@ void draw_sprites(void)
 
 void draw_window(void)
 {
-    printf("drawing window\n");
+	u32 x = (read_byte(WX) & 0xFF) - 7;
+	u32 y = read_byte(WY) & 0xFF;
+	u8 lcdc = read_byte(LCDC);
+	bool is_unsigned_chrs = (lcdc & bit4) ? true : false;
+	u16 bg_map_data_start, bg_map_data_addr_end;
+
+	if (lcdc & bit3) // background map data
+	{
+		bg_map_data_start = BG_MAP_1;
+		bg_map_data_addr_end = BG_MAP_1_END;
+	}
+	else
+	{
+		bg_map_data_start = BG_MAP_0;
+		bg_map_data_addr_end = BG_MAP_0_END;
+	}
+	for (int i = bg_map_data_start; i < bg_map_data_addr_end; i++)
+	{
+		u16 chr_loc_start;
+		if (is_unsigned_chrs)
+			chr_loc_start = read_byte(i) * 0x10 + CHR_MAP_UNSIGNED;
+		else
+			chr_loc_start = ((s8)read_byte(i)) * 0x10 + CHR_MAP_SIGNED;
+
+		for (int j = chr_loc_start; j < chr_loc_start + 0x10; j += 2)
+		{
+			draw_slice(read_byte(j), read_byte(j + 1), &x, &y, false);
+		}
+		x += 8;
+		y -= 8;
+		if (x == VIRT_GB_WINDOW_WIDTH)
+		{
+			y += 8;
+			x = 0;
+		}
+	}
 }
 
 void clear_surface(SDL_Surface *surf)
@@ -138,7 +185,6 @@ void clear_surface(SDL_Surface *surf)
 void render_full(void)
 {
 	clear_surface(window_surf);
-	clear_surface(virt_window_surf);
 	u8 lcdc = read_byte(LCDC);
 	if (lcdc & bit7) // is lcd on?
 	{
@@ -146,13 +192,13 @@ void render_full(void)
 		{
 			draw_background();
 		}
-		if (lcdc & bit1) // are sprites enabled?
-		{
-			draw_sprites();
-		}
 		if (lcdc & bit5) // is window enabled?
 		{
 			draw_window();
+		}
+		if (lcdc & bit1) // are sprites enabled?
+		{
+			draw_sprites();
 		}
 	}
 
@@ -164,14 +210,9 @@ void draw_scanline(void)
 {
 	write_byte(LY, scanline);
 	scanline++;
+
 	if (scanline == GB_WINDOW_HEIGHT)
 	{
-		SDL_Rect dstRect;
-		dstRect.x = 0;
-		dstRect.y = 0;
-		dstRect.w = window_surf->w;
-		dstRect.h = window_surf->h;
-		SDL_BlitSurface(virt_window_surf, NULL, window_surf, &dstRect);
 		SDL_UpdateWindowSurface(window);
 	}
 }
