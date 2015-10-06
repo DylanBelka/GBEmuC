@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <SDL_video.h>
+
 #include "gpu.h"
 #include "memdefs.h"
 #include "common.h"
@@ -204,15 +206,19 @@ void render_full(void)
 
 	scanline = 0;
 	write_byte(LY, scanline);
+	write_byte(STAT, read_byte(STAT) & ~bit4); // clear STAT after vblank
 }
 
 void draw_scanline(void)
 {
 	write_byte(LY, scanline);
 	scanline++;
+	write_byte(STAT, (read_byte(STAT) | bit3) & ~bit0 & ~bit1); // update STAT for hblank
 
-	if (scanline == GB_WINDOW_HEIGHT)
+	if (scanline == GB_WINDOW_HEIGHT) // vblank
 	{
+		write_byte(IF, 0x1); /* set vblank interrupt */
+		write_byte(STAT, (read_byte(STAT) | bit4) & ~bit3 | bit0); // update STAT for vblank, clear hblank
 		SDL_UpdateWindowSurface(window);
 	}
 }
