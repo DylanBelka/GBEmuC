@@ -24,7 +24,11 @@ u8 scanline;
 // bg1 0x9800-0x9BFF
 // bg2 0x9C00-0x9FFF
 
-void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y, bool is_sprite)
+/* 23696
+ * problem with vertical scrolling
+ */
+
+static void draw_slice(u8 b1, u8 b2, u32 *x, u32 *y, bool is_sprite)
 {
     for (int i = 0x80; i >= 1; i >>= 1)
 	{
@@ -39,8 +43,10 @@ void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y, bool is_sprite)
 			{
 				u32 scrolledX, scrolledY;
 				// emulate background scrolling
-				scrolledX = *x + read_byte(SCX);
-				scrolledY = *y + read_byte(SCY);
+				scrolledX = (*x + read_byte(SCX)) & 255; // this doesnt work
+				scrolledY = (*y + read_byte(SCY)) & 255;
+				if (scrolledY * window_surf->w + scrolledX == 23696)
+					printf("scrolledX = %d scrolledY = %d\n", scrolledX, scrolledY);
 				pixel = &pixels[scrolledY * window_surf->w + scrolledX];
 			}
 			else // sprites are not scrolled
@@ -50,19 +56,19 @@ void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y, bool is_sprite)
 
 			if (curr_bit1 && curr_bit2) // bit1 (on) and bit2 (on)
 			{
-				*pixel = 0x081820; // "black"
+				*pixel = BLACK;
 			}
 			else if (!is_sprite && !curr_bit1 && !curr_bit2) // bit1 (off) and bit2 (off)
 			{
-				*pixel = 0xE0F8D0; // "white"
+				*pixel = WHITE;
 			}
 			else if (curr_bit1 && !curr_bit2) // bit1 (on) and bit2 (off)
 			{
-				*pixel = 0x88C070; // "light grey"
+				*pixel = LIGHT_GREY;
 			}
 			else if (!is_sprite) // bit1 (off) bit2 (on)
 			{
-				*pixel = 0x346856; // "dark grey"
+				*pixel = DARK_GREY;
 			}
 		}
 		*x += 1;
@@ -72,7 +78,7 @@ void draw_slice(u8 b1, u8 b2, unsigned int *x, unsigned int *y, bool is_sprite)
 	*y += 1;
 }
 
-void draw_background(void)
+static void draw_background(void)
 {
 	u32 x = 0, y = 0;
 	u8 lcdc = read_byte(LCDC);
@@ -111,7 +117,7 @@ void draw_background(void)
 	}
 }
 
-void draw_sprites(void)
+static void draw_sprites(void)
 {
 	u8 lcdc = read_byte(LCDC);
 	bool is_8x16_sprite = (lcdc & bit2) ? true : false;
@@ -139,7 +145,7 @@ void draw_sprites(void)
 	}
 }
 
-void draw_window(void)
+static void draw_window(void)
 {
 	u32 x = (read_byte(WX) & 0xFF) - 7;
 	u32 y = read_byte(WY) & 0xFF;
