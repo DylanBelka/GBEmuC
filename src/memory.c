@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "memory.h"
 #include "registers.h"
 #include "emu.h"
+#include "memdefs.h"
 
 u8 rom[0x4000];
 u8 banked_rom[0x4000];
@@ -14,7 +16,6 @@ u8 internal_mem[0x4000];
 
 void reset_mem(void)
 {
-	#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 	unsigned int i;
 	for (i = 0; i < NELEMS(rom); i++)
 	{
@@ -36,7 +37,6 @@ void reset_mem(void)
 	{
 		internal_mem[i] = 0;
 	}
-	#undef NELEMS
 }
 
 void write_byte_load_rom(u16 addr, u8 val)
@@ -64,21 +64,24 @@ void load_rom(char *rom_name)
 	fp = fopen(rom_name, "rb");
 	if (fp == NULL)
 	{
-		printf("Cannot open file %s", rom_name);
+		//printf("Cannot open file %s", rom_name);
 		exit(1);
 	}
 
 	fseek(fp, 0, SEEK_END);
 	size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	printf("ROM size 0x%x\n", size);
-
 	while (fscanf(fp, "%c", &c) != EOF && i < size)
 	{
 		write_byte_load_rom(i, c);
 		i++;
 	}
 	fclose(fp);
+
+	printf("ROM <%s> loaded successfully\n", get_byte(TITLE));
+	printf("Cart type: 0x%x\n", read_byte(CART_TYPE));
+    printf("Cart ROM size: 0x%x\n", read_byte(CART_ROM_SIZE));
+	printf("Cart RAM size: 0x%x\n", read_byte(CART_RAM_SIZE));
 }
 
 u8 read_byte(u16 addr)

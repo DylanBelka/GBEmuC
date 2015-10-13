@@ -25,4 +25,6 @@ enum bits
 	bit7 = 0x80
 };
 
+#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
+
 #endif /* GBEMC_COMMON_H */
