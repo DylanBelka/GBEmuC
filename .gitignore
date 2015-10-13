@@ -6,3 +6,5 @@
 *.layout
 *.dll
 *.o
+cpu_instrs/
+bin/
