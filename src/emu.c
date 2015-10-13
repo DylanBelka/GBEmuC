@@ -44,7 +44,13 @@ void init_video(void)
         handle_sdl_error("unable to create window surface");
 	}
 
-	SDL_UpdateWindowSurface(window);
+	SDL_Surface *icon_surf = SDL_LoadBMP("icon.bmp");
+	if (icon_surf == NULL)
+	{
+        handle_sdl_error("unable to load file icon.bmp");
+	}
+	SDL_SetWindowIcon(window, icon_surf);
+	SDL_FreeSurface(icon_surf);
 }
 
 void handle_events(void)
