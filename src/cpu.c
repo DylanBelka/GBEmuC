@@ -70,15 +70,15 @@ void handle_interrupts(void)
 		{
 			interrupt(0x48);
 		}
-		else if ((int_enable & bit1) && (int_flag & bit1)) /* timer overflow */
+		else if ((int_enable & bit2) && (int_flag & bit2)) /* timer overflow */
 		{
 			interrupt(0x50);
 		}
-		else if ((int_enable & bit1) && (int_flag & bit1)) /* serial link */
+		else if ((int_enable & bit3) && (int_flag & bit3)) /* serial link */
 		{
 			interrupt(0x58);
 		}
-		else if ((int_enable & bit1) && (int_flag & bit1)) /* joypad press */
+		else if ((int_enable & bit4) && (int_flag & bit4)) /* joypad press */
 		{
 			interrupt(0x60);
 		}
