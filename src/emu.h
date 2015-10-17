@@ -28,12 +28,10 @@ void init(void);
 
 void run(void);
 
-void handle_events(void);
-
 extern SDL_Window* window;
-extern SDL_GLContext gl_context;
 extern bool is_running;
 extern SDL_Surface* window_surf;
+extern SDL_Surface* draw_surf; // 256x256 surface that is drawn on (then copied to window_surf)
 extern struct GBKeys key_info;
 
 enum KeyGroups

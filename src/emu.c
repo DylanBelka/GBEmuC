@@ -9,9 +9,9 @@
 #include "memory.h"
 
 SDL_Window* window;
-SDL_GLContext gl_context;
 bool is_running = true;
 SDL_Surface* window_surf;
+SDL_Surface* draw_surf;
 struct GBKeys key_info;
 
 void handle_sdl_error(char *msg)
@@ -19,13 +19,13 @@ void handle_sdl_error(char *msg)
 	printf("SDL Error: %s error code %d\n", msg, SDL_GetError());
 	if (window)
 		SDL_DestroyWindow(window);
-	if (gl_context)
-		SDL_GL_DeleteContext(gl_context);
+	if (draw_surf)
+		SDL_FreeSurface(draw_surf);
 	SDL_Quit();
 	exit(-1);
 }
 
-void init_video(void)
+static void init_video(void)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -44,16 +44,24 @@ void init_video(void)
         handle_sdl_error("unable to create window surface");
 	}
 
+	SDL_PixelFormat *fmt = window_surf->format;
+	draw_surf = SDL_CreateRGBSurface(window_surf->flags, VIRT_GB_WINDOW_WIDTH, VIRT_GB_WINDOW_HEIGHT,
+										fmt->BitsPerPixel, fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask);
+	if (draw_surf == NULL)
+	{
+        handle_sdl_error("unable to create draw surface");
+	}
+
 	SDL_Surface *icon_surf = SDL_LoadBMP("icon.bmp");
 	if (icon_surf == NULL)
 	{
         handle_sdl_error("unable to load file icon.bmp");
 	}
-	SDL_SetWindowIcon(window, icon_surf);
+	//SDL_SetWindowIcon(window, icon_surf);
 	SDL_FreeSurface(icon_surf);
 }
 
-void handle_events(void)
+static void handle_events(void)
 {
 	SDL_Event e;
 	while (SDL_PollEvent(&e))
@@ -189,6 +197,6 @@ void cleanup(void)
 {
 	SDL_DestroyWindow(window);
 	SDL_FreeSurface(window_surf);
-	SDL_GL_DeleteContext(gl_context);
+	SDL_FreeSurface(draw_surf);
 	SDL_Quit();
 }

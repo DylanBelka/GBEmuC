@@ -34,9 +34,9 @@ static void draw_slice(u8 b1, u8 b2, u32 *x, u32 *y, bool is_sprite)
 	{
         int curr_bit1 = b1 & i;
         int curr_bit2 = b2 & i;
-        u32 *pixels = (u32*)window_surf->pixels;
+        u32 *pixels = (u32*)draw_surf->pixels;
 		if ((s32)*x >= 0 && (s32)*y >= 0 &&
-			(s32)*x < window_surf->w && (s32)*y < window_surf->h) // make sure the coords are in bounds
+			(s32)*x < draw_surf->w && (s32)*y < draw_surf->h) // make sure the coords are in bounds
 		{
 			u32 *pixel;
 			if (!is_sprite)
@@ -45,13 +45,11 @@ static void draw_slice(u8 b1, u8 b2, u32 *x, u32 *y, bool is_sprite)
 				// emulate background scrolling
 				scrolledX = (*x + read_byte(SCX)) & 255; // this doesnt work
 				scrolledY = (*y + read_byte(SCY)) & 255;
-				if (scrolledY * window_surf->w + scrolledX == 23696)
-					printf("scrolledX = %d scrolledY = %d\n", scrolledX, scrolledY);
-				pixel = &pixels[scrolledY * window_surf->w + scrolledX];
+				pixel = &pixels[scrolledY * draw_surf->w + scrolledX];
 			}
 			else // sprites are not scrolled
 			{
-				pixel = &pixels[*y * window_surf->w + *x];
+				pixel = &pixels[*y * draw_surf->w + *x];
 			}
 
 			if (curr_bit1 && curr_bit2) // bit1 (on) and bit2 (on)
@@ -192,7 +190,7 @@ void clear_surface(SDL_Surface *surf)
 
 void render_full(void)
 {
-	clear_surface(window_surf);
+	clear_surface(draw_surf);
 	u8 lcdc = read_byte(LCDC);
 	if (lcdc & bit7) // is lcd on?
 	{
@@ -225,6 +223,7 @@ void draw_scanline(void)
 	{
 		write_byte(IF, 0x1); /* set vblank interrupt */
 		write_byte(STAT, (read_byte(STAT) | bit4) & ~bit3 | bit0); // update STAT for vblank, clear hblank
+		SDL_BlitSurface(draw_surf, NULL, window_surf, NULL);
 		SDL_UpdateWindowSurface(window);
 	}
 }
