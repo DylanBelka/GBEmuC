@@ -21,9 +21,9 @@ void update_halfcarry(unsigned int val)
 		registers.F.H = 0;
 }
 
-void update_zero(unsigned int val)
+void update_zero(u8 val)
 {
-	if (val == 0)
+	if ((val & 0xFF) == 0)
 		registers.F.Z = 1;
 	else
 		registers.F.Z = 0;
@@ -35,7 +35,7 @@ void inc(u8 *r)
 	(*r)++;
 
 	update_halfcarry(result);
-	update_zero(result);
+	update_zero(*r);
 	registers.F.N = 0;
 }
 
@@ -45,7 +45,7 @@ void dec(u8 *r)
 	(*r)--;
 
 	update_halfcarry(result);
-	update_zero(result);
+	update_zero(*r);
 	registers.F.N = 1;
 }
 
@@ -54,7 +54,7 @@ void cp(u8 val)
 	unsigned int result = registers.A - val;
 	update_carry(result);
 	update_halfcarry(result);
-	update_zero(result);
+	update_zero(registers.A - val);
 	registers.F.N = 1;
 }
 
@@ -65,7 +65,7 @@ void add(u8 val)
 
 	update_carry(result);
 	update_halfcarry(result);
-	update_zero(result);
+	update_zero(registers.A);
 	registers.F.N = 0;
 }
 
@@ -76,7 +76,7 @@ void adc(u8 val)
 
 	update_carry(result);
 	update_halfcarry(result);
-	update_zero(result);
+	update_zero(registers.A);
 	registers.F.N = 0;
 }
 
@@ -86,7 +86,7 @@ void sub(u8 val)
 	registers.A -= val;
 
 	update_carry(result);
-	update_halfcarry(result);
+	update_halfcarry(registers.A);
 	update_zero(result);
 }
 
@@ -96,40 +96,37 @@ void sbc(u8 val)
 	registers.A -= (val + registers.F.C);
 
 	update_carry(result);
-	update_halfcarry(result);
+	update_halfcarry(registers.A);
 	update_zero(result);
 }
 
 void and(u8 val)
 {
-	unsigned int result = registers.A & val;
 	registers.A &= val;
 
 	registers.F.C = 0;
 	registers.F.H = 1;
-	update_zero(result);
+	update_zero(registers.A);
 	registers.F.N = 0;
 }
 
 void xor(u8 val)
 {
-	unsigned int result = registers.A ^ val;
 	registers.A ^= val;
 
 	registers.F.C = 0;
 	registers.F.H = 0;
-	update_zero(result);
+	update_zero(registers.A);
 	registers.F.N = 0;
 }
 
 void or(u8 val)
 {
-	unsigned int result = registers.A | val;
 	registers.A |= val;
 
 	registers.F.C = 0;
 	registers.F.H = 0;
-	update_zero(result);
+	update_zero(registers.A);
 	registers.F.N = 0;
 }
 
@@ -679,7 +676,7 @@ void ld_pc_a(void) { write_byte(registers.C + 0xFF00, registers.A); }				/* 0xE2
 void push_hl(void) { push(registers.HL); }											/* 0xE3 */
 void and_n(void) { and(read_byte(registers.PC + 1)); }								/* 0xE4 */
 void rst_0x20(void) { rst(0x20); }													/* 0xE5 */
-void add_sp_n(void) { add16(&registers.SP, read_byte(registers.PC + 1) & 0xFF); }	/* 0xE8 */
+void add_sp_n(void) { registers.SP += (s8)read_byte(registers.PC + 1); add16(&registers.SP, 0x000); }/* 0xE8 */ // the add16 is just to update flags
 void jp_hl(void) { registers.PC = registers.HL; }									/* 0xE9 */
 void ld_pnn_a(void) { write_byte(read_word(registers.PC + 1), registers.A); }		/* 0xEA */
 void xor_n(void) { xor(read_byte(registers.PC + 1)); }								/* 0xEE */
@@ -901,7 +898,7 @@ struct instruction instructions[256] =
 	{"ret nz", ret_nz, 0, 8},
 	{"pop bc", pop_bc, 1, 12},
 	{"jp nz, 0x%x", jp_nz_nn, 0, 12},
-	{"jp nn", jp_nn, 0, 12},
+	{"jp 0x%x", jp_nn, 0, 12},
 	{"call nz, 0x%x", call_nz_nn, 0, 12},
 	{"push bc", push_bc, 1, 16},
 	{"add a, 0x%x", add_a_n, 2, 8},
