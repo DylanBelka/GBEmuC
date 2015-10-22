@@ -8,3 +8,4 @@
 *.o
 cpu_instrs/
 bin/
+.sav
