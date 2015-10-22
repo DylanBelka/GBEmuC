@@ -57,7 +57,7 @@ static void init_video(void)
 	{
         handle_sdl_error("unable to load file icon.bmp");
 	}
-	//SDL_SetWindowIcon(window, icon_surf);
+	SDL_SetWindowIcon(window, icon_surf);
 	SDL_FreeSurface(icon_surf);
 }
 
