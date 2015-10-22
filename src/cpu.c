@@ -10,8 +10,8 @@ struct cpu cpu;
 void dump_cpu(void)
 {
 	#define r(reg) registers.reg
-	printf("AF: %x\nBC: %x\nDE: %x\nHL: %x\n",
-		r(AF), r(BC), r(DE), r(HL));
+	printf("AF: 0x%x\nBC: 0x%x\nDE: 0x%x\nHL: 0x%x\nPC: 0x%x\nSP: 0x%x\n",
+		r(AF), r(BC), r(DE), r(HL), r(PC), r(SP));
 	#undef r
 }
 
