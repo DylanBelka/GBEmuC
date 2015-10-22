@@ -43,7 +43,7 @@ static void draw_slice(u8 b1, u8 b2, u32 *x, u32 *y, bool is_sprite)
 			{
 				u32 scrolledX, scrolledY;
 				// emulate background scrolling
-				scrolledX = (*x + read_byte(SCX)) & 255; // this doesnt work
+				scrolledX = (*x + read_byte(SCX)) & 255;
 				scrolledY = (*y + read_byte(SCY)) & 255;
 				pixel = &pixels[scrolledY * draw_surf->w + scrolledX];
 			}
@@ -81,19 +81,14 @@ static void draw_background(void)
 	u32 x = 0, y = 0;
 	u8 lcdc = read_byte(LCDC);
 	bool is_unsigned_chrs = (lcdc & bit4) ? true : false;
-	u16 bg_map_data_start, bg_map_data_addr_end;
+	u16 bg_map_data_start;
 
 	if (lcdc & bit3) // background map data
-	{
 		bg_map_data_start = BG_MAP_1;
-		bg_map_data_addr_end = BG_MAP_1_END;
-	}
 	else
-	{
 		bg_map_data_start = BG_MAP_0;
-		bg_map_data_addr_end = BG_MAP_0_END;
-	}
-	for (int i = bg_map_data_start; i < bg_map_data_addr_end; i++)
+
+	for (int i = bg_map_data_start; i < bg_map_data_start + 0x3FF; i++)
 	{
 		u16 chr_loc_start;
 		if (is_unsigned_chrs)
@@ -149,19 +144,14 @@ static void draw_window(void)
 	u32 y = read_byte(WY) & 0xFF;
 	u8 lcdc = read_byte(LCDC);
 	bool is_unsigned_chrs = (lcdc & bit4) ? true : false;
-	u16 bg_map_data_start, bg_map_data_addr_end;
+	u16 bg_map_data_start;
 
 	if (lcdc & bit3) // background map data
-	{
 		bg_map_data_start = BG_MAP_1;
-		bg_map_data_addr_end = BG_MAP_1_END;
-	}
 	else
-	{
 		bg_map_data_start = BG_MAP_0;
-		bg_map_data_addr_end = BG_MAP_0_END;
-	}
-	for (int i = bg_map_data_start; i < bg_map_data_addr_end; i++)
+
+	for (int i = bg_map_data_start; i < bg_map_data_start + 0x3FF; i++)
 	{
 		u16 chr_loc_start;
 		if (is_unsigned_chrs)
