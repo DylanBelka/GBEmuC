@@ -6,12 +6,12 @@
 #include "registers.h"
 #include "emu.h"
 #include "memdefs.h"
+#include "cart.h"
 
 u8 rom[0x4000];
-u8 banked_rom[0x4000];
+u8 (*banked_roms)[0x4000];
 u8 vram[0x2000];
-u8 banked_ram[0x2000];
-
+u8 (*banked_rams)[0x2000];
 u8 internal_mem[0x4000];
 
 void reset_mem(void)
@@ -21,17 +21,9 @@ void reset_mem(void)
 	{
 		rom[i] = 0;
 	}
-	for (i = 0; i < NELEMS(banked_rom); i++)
-	{
-		banked_rom[i] = 0;
-	}
 	for (i = 0; i < NELEMS(vram); i++)
 	{
 		vram[i] = 0;
-	}
-	for (i = 0; i < NELEMS(banked_ram); i++)
-	{
-		banked_ram[i] = 0;
 	}
 	for (i = 0; i < NELEMS(internal_mem); i++)
 	{
@@ -39,19 +31,20 @@ void reset_mem(void)
 	}
 }
 
-void write_byte_load_rom(u16 addr, u8 val)
+void write_byte_load_rom(int addr, u8 val)
 {
 	if (addr < 0x4000) /* ROM bank 0 */
 	{
-		rom[addr - 0x0000] = val;
+		rom[addr] = val;
 	}
-	else if (addr >= 0x4000 && addr < 0x8000) /* ROM bank n */
+	else if (addr >= 0x4000) /* ROM bank n */
 	{
-		banked_rom[addr - 0x4000] = val;
+		mbc_write_load_rom(addr, val);
 	}
 	else
 	{
-		printf("write_byte_load_rom at 0x%x to addr: 0x%x with value: 0x%x", registers.PC, addr, val);
+		printf("write_byte_load_rom at 0x%x to addr: 0x%x with value: 0x%x\n", registers.PC, addr, val);
+		getchar();
 	}
 }
 
@@ -64,7 +57,7 @@ void load_rom(char *rom_name)
 	fp = fopen(rom_name, "rb");
 	if (fp == NULL)
 	{
-		//printf("Cannot open file %s", rom_name);
+		printf("Cannot open file %s", rom_name);
 		exit(1);
 	}
 
@@ -75,13 +68,25 @@ void load_rom(char *rom_name)
 	{
 		write_byte_load_rom(i, c);
 		i++;
+		if (i == 0x150) // rom header loaded
+		{				// now setup "cart" for rom/ram banking
+			init_cart();
+		}
 	}
+	cart_info.current_rom_bank = 0;
 	fclose(fp);
 
 	printf("ROM <%s> loaded successfully\n", get_byte(TITLE));
 	printf("Cart type: 0x%x\n", read_byte(CART_TYPE));
     printf("Cart ROM size: 0x%x\n", read_byte(CART_ROM_SIZE));
 	printf("Cart RAM size: 0x%x\n", read_byte(CART_RAM_SIZE));
+
+	//getchar();
+
+	for (int j = 0; j < i; j++)
+    {
+        printf("0x%x\n", read_byte(j));
+    }
 }
 
 u8 read_byte(u16 addr)
@@ -131,19 +136,16 @@ void write_byte(u16 addr, u8 val)
 	else if (addr == 0xFF00) // key input
 	{
 		key_info.colID = registers.A;
-		return;
 	}
-	if (addr < 0x4000) /* ROM bank 0 */
+	if (addr < 0x8000) /* ROM */
 	{
-		/* memory bank controllers */
-		printf("mbc write at 0x%x addr = 0x%x val =  0x%x instr = 0x%x\n", registers.PC, addr, val, read_byte(registers.PC));
-		//getchar();
+		printf("mbc write pc = 0x%x addr = 0x%x val =  0x%x\n", registers.PC, addr, val);
+		mbc_write(addr, val);
 	}
-	else if (addr >= 0x4000 && addr < 0x8000) /* ROM bank n */
+	else if (addr >= 0xA000 && addr < 0xC000) /* ram bank n */
 	{
-		/* more memory bank controllers */
-		printf("mbc write at 0x%x addr = 0x%x val =  0x%x\n", registers.PC, addr, val);
-		getchar();
+		printf("mbc write to rom pc = 0x%x addr = 0x%x val = 0x%x\n", registers.PC, addr, val);
+		mbc_write_ram(addr, val);
 	}
 	else if (byte != NULL)
 	{
@@ -151,7 +153,7 @@ void write_byte(u16 addr, u8 val)
 	}
 	else
 	{
-		printf("write_byte at 0x%x to addr: 0x%x with value: 0x%x", registers.PC, addr, val);
+		printf("write_byte at 0x%x to addr: 0x%x with value: 0x%x\n", registers.PC, addr, val);
 		getchar();
 	}
 }
@@ -170,7 +172,7 @@ u8* get_byte(u16 addr)
 	}
 	else if (addr >= 0x4000 && addr < 0x8000) /* ROM bank n */
 	{
-		return &banked_rom[addr - 0x4000];
+		return get_rom_byte_mbc(addr);
 	}
 	else if (addr >= 0x8000 && addr < 0xA000) /* vram */
 	{
@@ -178,7 +180,7 @@ u8* get_byte(u16 addr)
 	}
 	else if (addr >= 0xA000 && addr < 0xC000) /* RAM bank */
 	{
-		return &banked_ram[addr - 0xA000];
+		return get_ram_byte_mbc(addr);
 	}
 	else if (addr >= 0xC000) /* internal memory */
 	{

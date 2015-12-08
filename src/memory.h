@@ -5,12 +5,11 @@
 
 #include "common.h"
 
-extern u8 rom[0x4000];			/* 0x0000-0x3FFF */
-extern u8 banked_rom[0x4000];	/* 0x4000-0x7FFF */
-extern u8 vram[0x2000];			/* 0x8000-0x9FFF */
-extern u8 banked_ram[0x2000];	/* 0xA000-0xBFFF (if available) */
-
-extern u8 internal_mem[0x4000]; /* 0xC000-0xFFFF */
+extern u8 rom[0x4000];				/* 0x0000-0x3FFF */
+extern u8 (*banked_roms)[0x4000];	/* 0x4000-0x7FFF (always 1 fixed to bank 0) */
+extern u8 vram[0x2000];				/* 0x8000-0x9FFF */
+extern u8 (*banked_rams)[0x2000];	/* 0xA000-0xBFFF (if available) */
+extern u8 internal_mem[0x4000]; 	/* 0xC000-0xFFFF */
 
 void reset_mem(void);
 
