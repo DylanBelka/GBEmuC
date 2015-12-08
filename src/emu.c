@@ -195,6 +195,8 @@ void run(void)
 
 void cleanup(void)
 {
+	free(banked_roms);
+	free(banked_rams);
 	SDL_DestroyWindow(window);
 	SDL_FreeSurface(window_surf);
 	SDL_FreeSurface(draw_surf);
