@@ -233,8 +233,8 @@ void rlc(u8 *r)
 {
 	rotl(r, 1);
 
-	registers.F.C = (*r >> 0x7) & 0x1;
-	*r |= (*r >> 0x7) & 0x1;
+	registers.F.C = (*r >> 0x7) & bit0;
+	*r |= (*r >> 0x7) & bit0;
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
@@ -243,8 +243,8 @@ void rrc(u8 *r)
 {
 	rotr(r, 1);
 
-	registers.F.C = *r & 0x1;
-	*r |= (*r << 0x7) & 0x80;
+	registers.F.C = *r & bit0;
+	*r |= (*r << 0x7) & bit7;
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
@@ -254,17 +254,18 @@ void rl(u8 *r)
 	rotl(r, 1);
 
 	*r |= registers.F.C;
-	registers.F.C = (*r >> 0x7) & 0x1;
+	registers.F.C = (*r >> 0x7) & bit0;
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
 
 void rr(u8 *r)
 {
+	registers.F.C = *r & bit0;
 	rotr(r, 1);
 
-	*r |= (registers.F.C << 0x7) & 0x80;
-	registers.F.C = *r & 0x1;
+	*r |= (registers.F.C << 0x7) & bit7;
+
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
@@ -273,8 +274,8 @@ void sla(u8 *r)
 {
 	*r <<= 1;
 
-	registers.F.C = (*r >> 0x7) & 0x1;
-	*r &= ~0x1u;
+	registers.F.C = (*r >> 0x7) & bit0;
+	*r &= ~bit0;
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
@@ -283,7 +284,7 @@ void sra(u8 *r)
 {
 	*r >>= 1;
 
-	registers.F.C = *r & 0x1;
+	registers.F.C = *r & bit0;
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
@@ -303,8 +304,8 @@ void srl(u8 *r)
 {
 	*r >>= 1;
 
-	registers.F.C = *r & 0x1;
-	registers.A &= ~0x80u;
+	registers.F.C = *r & bit0;
+	registers.A &= ~bit7;
 	registers.F.H = 0;
 	registers.F.N = 0;
 }
@@ -404,7 +405,7 @@ void bit_instruction_impl(u8 instr)
 			bit(op2, *op1);
 			break;
 		}
-		case 0x80: case 0x90: case 0xA0: case 0xB0:
+		case bit7: case 0x90: case 0xA0: case 0xB0:
 		{
 			res(op2, op1);
 			break;
@@ -465,22 +466,22 @@ void inc_c(void) { inc(&registers.C); }												/* 0x0C */
 void dec_c(void) { dec(&registers.C); }												/* 0x0D */
 void ld_c_n(void) { registers.C = read_byte(registers.PC + 1); }					/* 0x0E */
 void rrca(void) { rrc(&registers.A); }												/* 0x0F */
-void stop_cpu(void) { cpu.is_stopped = true; }										/* 0x10 */
-void ld_de_nn(void) { registers.DE = read_word(registers.PC + 1); }					/* 0x11 */
-void ld_pde_a(void) { write_byte(registers.DE, registers.A); }						/* 0x12 */
-void inc_de(void) { registers.DE++; }												/* 0x13 */
-void inc_d(void) { inc(&registers.D); }												/* 0x14 */
-void dec_d(void) { dec(&registers.D); }												/* 0x15 */
-void ld_d_n(void) { registers.D = read_byte(registers.PC + 1); }					/* 0x16 */
-void rla(void) { rl(&registers.A); }												/* 0x17 */
-void jr_n(void) { jr(true); }														/* 0x18 */
-void add_hl_de(void) { add16(&registers.HL, registers.DE); }						/* 0x19 */
-void ld_a_pde(void) { registers.A = read_byte(registers.DE); }						/* 0x1A */
-void dec_de(void) { registers.DE--; }												/* 0x1B */
-void inc_e(void) { inc(&registers.E); }												/* 0x1C */
-void dec_e(void) { dec(&registers.E); }												/* 0x1D */
-void ld_e_n(void) { registers.E = read_byte(registers.PC + 1); }					/* 0x1E */
-void rra(void) { rr(&registers.A); }												/* 0x1F */
+void stop_cpu(void) { cpu.is_stopped = true; }										/* bit00 */
+void ld_de_nn(void) { registers.DE = read_word(registers.PC + 1); }					/* bit01 */
+void ld_pde_a(void) { write_byte(registers.DE, registers.A); }						/* bit02 */
+void inc_de(void) { registers.DE++; }												/* bit03 */
+void inc_d(void) { inc(&registers.D); }												/* bit04 */
+void dec_d(void) { dec(&registers.D); }												/* bit05 */
+void ld_d_n(void) { registers.D = read_byte(registers.PC + 1); }					/* bit06 */
+void rla(void) { rl(&registers.A); }												/* bit07 */
+void jr_n(void) { jr(true); }														/* bit08 */
+void add_hl_de(void) { add16(&registers.HL, registers.DE); }						/* bit09 */
+void ld_a_pde(void) { registers.A = read_byte(registers.DE); }						/* bit0A */
+void dec_de(void) { registers.DE--; }												/* bit0B */
+void inc_e(void) { inc(&registers.E); }												/* bit0C */
+void dec_e(void) { dec(&registers.E); }												/* bit0D */
+void ld_e_n(void) { registers.E = read_byte(registers.PC + 1); }					/* bit0E */
+void rra(void) { rr(&registers.A); }												/* bit0F */
 void jr_nz_n(void) { jr(!registers.F.Z); }											/* 0x20 */
 void ld_hl_nn(void) { registers.HL = read_word(registers.PC + 1); } 				/* 0x21 */
 void ldi_phl_a(void) { write_byte(registers.HL, registers.A); registers.HL++; }		/* 0x22 */
@@ -577,7 +578,7 @@ void ld_a_h(void) { registers.A = registers.H; }									/* 0x7C */
 void ld_a_l(void) { registers.A = registers.L; }									/* 0x7D */
 void ld_a_phl(void){registers.A = read_byte(registers.HL); }						/* 0x7E */
 void ld_a_a(void) { registers.A = registers.A; }									/* 0x7F */
-void add_a_b(void) { add(registers.B); }											/* 0x80 */
+void add_a_b(void) { add(registers.B); }											/* bit7 */
 void add_a_c(void) { add(registers.C); }											/* 0x81 */
 void add_a_d(void) { add(registers.D); }											/* 0x82 */
 void add_a_e(void) { add(registers.E); }											/* 0x83 */
@@ -688,7 +689,7 @@ void di(void) { cpu.IME = false; }													/* 0xF3 */
 void push_af(void) { push(registers.AF); }											/* 0xF5 */
 void or_n(void) { or(read_byte(registers.PC + 1)); }								/* 0xF6 */
 void rst_0x30(void) { rst(0x30); }													/* 0xF7 */
-void ld_hl_sp(void) { registers.HL = registers.SP + read_byte(registers.PC + 1); }	/* 0xF8 */
+void ld_hl_sp(void) { registers.HL = registers.SP + (s8)read_byte(registers.PC + 1); }	/* 0xF8 */
 void ld_sp_hl(void) { registers.SP = registers.HL; }								/* 0xF9 */
 void ld_a_pnn(void) { registers.A = read_byte(read_word(registers.PC + 1)); }		/* 0xFA */
 void ei(void) { cpu.IME = true; }													/* 0xFB */
