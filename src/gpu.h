@@ -8,6 +8,7 @@ extern u8 scanline;
 void render_full(void);
 void draw_scanline(void);
 
+// 32 bit colors
 #define BLACK		0x081820
 #define WHITE		0xE0F8D0
 #define LIGHT_GREY	0x88C070
