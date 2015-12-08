@@ -24,10 +24,6 @@ u8 scanline;
 // bg1 0x9800-0x9BFF
 // bg2 0x9C00-0x9FFF
 
-/* 23696
- * problem with vertical scrolling
- */
-
 static void draw_slice(u8 b1, u8 b2, u32 *x, u32 *y, bool is_sprite)
 {
     for (int i = 0x80; i >= 1; i >>= 1)
@@ -43,8 +39,8 @@ static void draw_slice(u8 b1, u8 b2, u32 *x, u32 *y, bool is_sprite)
 			{
 				u32 scrolledX, scrolledY;
 				// emulate background scrolling
-				scrolledX = (*x + read_byte(SCX)) & 255;
-				scrolledY = (*y + read_byte(SCY)) & 255;
+				scrolledX = (*x + read_byte(SCX)) & 0xFF;
+				scrolledY = (*y + read_byte(SCY)) & 0xFF;
 				pixel = &pixels[scrolledY * draw_surf->w + scrolledX];
 			}
 			else // sprites are not scrolled
@@ -205,6 +201,7 @@ void render_full(void)
 
 void draw_scanline(void)
 {
+	// update current scanline
 	write_byte(LY, scanline);
 	scanline++;
 	write_byte(STAT, (read_byte(STAT) | bit3) & ~bit0 & ~bit1); // update STAT for hblank
